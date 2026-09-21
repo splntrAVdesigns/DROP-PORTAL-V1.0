@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "status": "base-only",
-  "updatedAt": null,
-  "targetDropDate": null,
+  "status": "queued",
+  "updatedAt": "2026-09-21T17:35:00-05:00",
+  "targetDropDate": "2026-09-21",
   "baseProfile": {
     "future": 35,
     "deep": 40,
@@ -15,5 +15,16 @@
     "count": 12,
     "mixes": true
   },
-  "weeklyOverride": null
+  "weeklyOverride": {
+    "future": 50,
+    "deep": 70,
+    "jungle": 50,
+    "depth": 80,
+    "experimental": 65,
+    "floor": 45,
+    "darkness": 70,
+    "breaks": 70,
+    "count": 10,
+    "mixes": true
+  }
 }
