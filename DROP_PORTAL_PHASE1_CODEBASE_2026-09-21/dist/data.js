@@ -4,3 +4,19 @@ export const tracks=names.map(([artistName,title,reason],i)=>({id:'t'+i,artistNa
 export const drops=[{id:'001',sequenceNumber:1,period:'21 — 27 SEP 2026',ids:tracks.slice(0,10).map(t=>t.id)},{id:'000',sequenceNumber:0,period:'14 — 20 SEP 2026',ids:['t10','t11','t0','t1','t2']}];
 export const mixes=[{id:'m0',title:'The after-hours session',artistName:'PORTAL SELECTS',reason:'Deep textures → rolling breaks · illustrative mix entry',demo:true}];
 export const defaults={scope:'base',future:35,deep:40,jungle:25,depth:80,experimental:65,floor:60,darkness:75,breaks:70,count:12,mixes:true};
+
+export function applyFeed(payloads){
+  if(!Array.isArray(payloads)||!payloads.length)return false;
+  const bundledDrops=drops.map(d=>({...d}));
+  const liveTracks=[],liveMixes=[],liveDrops=[];
+  for(const p of payloads){
+    for(const t of p.tracks||[])if(!liveTracks.some(x=>x.id===t.id))liveTracks.push(t);
+    for(const m of p.mixes||[])if(!liveMixes.some(x=>x.id===m.id))liveMixes.push(m);
+    liveDrops.push(p.drop);
+  }
+  tracks.splice(0,tracks.length,...liveTracks);
+  mixes.splice(0,mixes.length,...liveMixes);
+  const seen=new Set(liveDrops.map(d=>d.id));
+  drops.splice(0,drops.length,...liveDrops,...bundledDrops.filter(d=>!seen.has(d.id)));
+  return true;
+}
