@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "status": "base-only",
+  "updatedAt": null,
+  "targetDropDate": null,
+  "baseProfile": {
+    "future": 35,
+    "deep": 40,
+    "jungle": 25,
+    "depth": 80,
+    "experimental": 65,
+    "floor": 60,
+    "darkness": 75,
+    "breaks": 70,
+    "count": 12,
+    "mixes": true
+  },
+  "weeklyOverride": null
+}
