@@ -1,0 +1,9 @@
+export const audio=new Audio(); audio.preload='metadata';audio.volume=.65;
+export let current=null,peaks=[],status='idle';let revision=0;
+export async function play(track){if(!track.preview)return;if(current?.id===track.id&&status!=='error'){if(audio.paused){try{await audio.play()}catch{status='error';notify()}}else audio.pause();return}const token=++revision;audio.pause();current=track;peaks=[];status='loading';audio.src=track.preview.previewUrl;notify();fetch(track.preview.waveformPeaksUrl).then(r=>{if(!r.ok)throw Error();return r.json()}).then(p=>{if(token===revision){peaks=p;notify()}}).catch(()=>{});try{await audio.play()}catch{if(token===revision){status='error';notify()}}}
+function notify(){window.dispatchEvent(new Event('previewchange'))}
+for(const e of ['playing','pause','ended','error','timeupdate','loadedmetadata'])audio.addEventListener(e,()=>{status=audio.error?'error':audio.ended?'ended':audio.paused?'paused':'playing';notify()});
+export function seek(v){if(Number.isFinite(audio.duration))audio.currentTime=Math.max(0,Math.min(audio.duration,v))}
+export function stop(){++revision;audio.pause();audio.removeAttribute('src');audio.load();current=null;status='idle';notify()}
+export const time=n=>`${Math.floor((n||0)/60)}:${String(Math.floor((n||0)%60)).padStart(2,'0')}`;
+export function waveform(){if(!peaks.length)return '<div class="wave-empty">Waveform unavailable</div>';const ratio=audio.duration?audio.currentTime/audio.duration:0;return `<svg viewBox="0 0 640 84" preserveAspectRatio="none" aria-hidden="true">${peaks.map((p,i)=>`<rect x="${i*4}" y="${42-p*55}" width="2.5" height="${Math.max(2,p*110)}" rx="1" fill="${i/peaks.length<=ratio?'#04d9ff':'#31515a'}"/>`).join('')}</svg>`}

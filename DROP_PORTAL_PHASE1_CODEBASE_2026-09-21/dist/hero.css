@@ -1,0 +1,67 @@
+.ascii-hero {
+  position: relative;
+  height: clamp(110px, 15vw, 205px);
+  margin-bottom: 34px;
+  overflow: hidden;
+  border: 1px solid #174653;
+  border-radius: 8px;
+  background: #030607;
+  box-shadow: inset 0 0 60px #04d9ff0a;
+}
+
+.ascii-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, #05070899 0, transparent 18%, transparent 82%, #05070899 100%),
+    linear-gradient(180deg, transparent 65%, #0507088f 100%);
+}
+
+.ascii-hero canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ascii-hero noscript img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ascii-hero-chrome {
+  position: absolute;
+  z-index: 1;
+  left: 18px;
+  right: 18px;
+  bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #80f0ff;
+  font: 10px monospace;
+  letter-spacing: 1.5px;
+  text-shadow: 0 0 12px #04d9ff;
+}
+
+.ascii-hero-chrome i {
+  height: 1px;
+  flex: 1;
+  background: #04d9ff52;
+}
+
+@media (max-width: 700px) {
+  .ascii-hero {
+    height: 105px;
+    margin-bottom: 26px;
+  }
+
+  .ascii-hero-chrome {
+    left: 12px;
+    right: 12px;
+    bottom: 11px;
+    font-size: 9px;
+  }
+}
