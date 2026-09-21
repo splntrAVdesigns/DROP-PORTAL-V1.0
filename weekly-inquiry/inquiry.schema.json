@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DROP:PORTAL Weekly Inquiry",
+  "type": "object",
+  "required": ["schemaVersion", "status", "baseProfile", "weeklyOverride"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "status": { "enum": ["base-only", "queued"] },
+    "updatedAt": { "type": ["string", "null"] },
+    "targetDropDate": { "type": ["string", "null"] },
+    "baseProfile": { "$ref": "#/$defs/profile" },
+    "weeklyOverride": { "anyOf": [{ "$ref": "#/$defs/profile" }, { "type": "null" }] }
+  },
+  "$defs": {
+    "profile": {
+      "type": "object",
+      "required": ["future","deep","jungle","depth","experimental","floor","darkness","breaks","count","mixes"],
+      "properties": {
+        "future":{"type":"number","minimum":0,"maximum":100},
+        "deep":{"type":"number","minimum":0,"maximum":100},
+        "jungle":{"type":"number","minimum":0,"maximum":100},
+        "depth":{"type":"number","minimum":0,"maximum":100},
+        "experimental":{"type":"number","minimum":0,"maximum":100},
+        "floor":{"type":"number","minimum":0,"maximum":100},
+        "darkness":{"type":"number","minimum":0,"maximum":100},
+        "breaks":{"type":"number","minimum":0,"maximum":100},
+        "count":{"type":"integer","minimum":10,"maximum":30},
+        "mixes":{"type":"boolean"}
+      }
+    }
+  }
+}
