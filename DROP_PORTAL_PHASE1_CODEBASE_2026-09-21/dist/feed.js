@@ -35,8 +35,8 @@ export async function loadWeeklyFeed(){
   feedState.status='loading';
   try{
     let resolved;
-    try{resolved=await loadManifest(LIVE_MANIFEST+'?v='+Date.now())}
-    catch(remoteError){console.warn('[DROP:PORTAL] live manifest unavailable; using deployed snapshot',remoteError);resolved=await loadManifest(DEPLOYED_MANIFEST)}
+    try{resolved=await loadManifest(DEPLOYED_MANIFEST+'?v='+Date.now())}
+    catch(snapshotError){console.warn('[DROP:PORTAL] deployed snapshot unavailable; using live repository feed',snapshotError);resolved=await loadManifest(LIVE_MANIFEST+'?v='+Date.now())}
     const{manifest,url:manifestUrl}=resolved;
     const manifestBase=new URL(manifestUrl,globalThis.location?.origin||'http://localhost').href;
     const entries=[...manifest.drops].filter(x=>x&&x.status==='published'&&x.url).sort((a,b)=>(b.publishedAt||'').localeCompare(a.publishedAt||''));
