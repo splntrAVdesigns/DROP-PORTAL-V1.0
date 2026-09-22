@@ -1,5 +1,12 @@
 {
   "schemaVersion": 1,
-  "updatedAt": null,
-  "drops": []
+  "updatedAt": "2026-09-21T19:01:08-05:00",
+  "drops": [
+    {
+      "id": "TEST-2026-09-21",
+      "publishedAt": "2026-09-21T19:01:08-05:00",
+      "status": "published",
+      "url": "./2026-09-21-test.json"
+    }
+  ]
 }
