@@ -6,11 +6,12 @@ const DEFAULT_MANIFEST='https://raw.githubusercontent.com/splntrAVdesigns/DROP-P
 function validTrack(t){return t&&typeof t.id==='string'&&typeof t.artistName==='string'&&typeof t.title==='string'&&Number.isInteger(t.lane)&&t.lane>=0&&t.lane<=3&&Number.isFinite(t.score)&&Number.isFinite(t.confidence)}
 function validDrop(d){return d&&typeof d.id==='string'&&Array.isArray(d.ids)&&d.ids.length>0&&typeof d.period==='string'}
 function validMix(m){return m&&typeof m.id==='string'&&typeof m.artistName==='string'&&typeof m.title==='string'}
+function validProfileSnapshot(s){const numeric=['future','deep','jungle','depth','experimental','floor','darkness','breaks','count'];return s&&typeof s==='object'&&numeric.every(k=>Number.isFinite(s[k]))&&typeof s.mixes==='boolean'}
 function validatePayload(p){
   if(!p||p.schemaVersion!==1||!validDrop(p.drop)||!Array.isArray(p.tracks))throw Error('Invalid DROP:PORTAL feed payload');
   const tracks=p.tracks.filter(validTrack),ids=new Set(tracks.map(t=>t.id));
   if(!p.drop.ids.every(id=>ids.has(id)))throw Error('Drop references missing tracks');
-  return{drop:p.drop,tracks,mixes:Array.isArray(p.mixes)?p.mixes.filter(validMix):[]};
+  return{drop:p.drop,tracks,mixes:Array.isArray(p.mixes)?p.mixes.filter(validMix):[],profileSnapshot:validProfileSnapshot(p.profileSnapshot)?{...p.profileSnapshot}:null};
 }
 async function json(url){const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw Error('Feed request failed '+r.status);return r.json()}
 export async function loadWeeklyFeed(){
