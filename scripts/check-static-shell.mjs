@@ -32,7 +32,9 @@ if (unmanagedFrames.length) {
   console.error(`[shell] FAIL: ${unmanagedFrames.length} autoplay provider frame(s) bypass playback ownership`);
   process.exit(1);
 }
-if (!appSource.includes('releaseProviderPlayback();player.play(') || !appSource.includes('claimProviderPlayback(document.activeElement)')) {
+if (!appSource.includes('releaseProviderPlayback();player.play(') ||
+    !appSource.includes("providerOwner===frame") ||
+    !appSource.includes("reconcileProviderFocus()},120")) {
   console.error('[shell] FAIL: preview playback ownership arbitration is missing');
   process.exit(1);
 }
