@@ -17,6 +17,17 @@ function providerFor(url){
   return key?PROVIDERS[key]:host.replace(/^([^.]+\.)?/,'').split('.')[0].toUpperCase();
 }
 
+function normalizeEmbedUrl(value,provider){
+  const url=externalUrl(value);if(!url)return null;
+  if(provider==='BANDCAMP'&&url.hostname.toLowerCase().replace(/^www\./,'')==='bandcamp.com'&&url.pathname.startsWith('/EmbeddedPlayer/')){
+    let href=url.href;
+    href=/\/bgcol=[^/]+/.test(href)?href.replace(/\/bgcol=[^/]+/,'/bgcol=333333'):href.replace(/\/$/,'/bgcol=333333/');
+    href=/\/linkcol=[^/]+/.test(href)?href.replace(/\/linkcol=[^/]+/,'/linkcol=04d9ff'):href.replace(/\/$/,'/linkcol=04d9ff/');
+    return href;
+  }
+  return url.href;
+}
+
 function inferredRoles(kind,provider){
   const value=String(kind||'').toLowerCase();
   const roles=new Set();
@@ -55,7 +66,8 @@ export function directPreview(item){
 export function embedPreview(item){
   const preview=item?.preview;
   if(preview?.kind==='provider-embed'&&externalUrl(preview.embedUrl)){
-    return{url:preview.embedUrl,provider:preview.provider||'AUTHORIZED PROVIDER'};
+    const provider=preview.provider||'AUTHORIZED PROVIDER';
+    return{url:normalizeEmbedUrl(preview.embedUrl,provider),provider};
   }
   const soundcloud=destinations(item).find(d=>d.provider==='SOUNDCLOUD'&&d.roles.has('listen'));
   if(soundcloud){
