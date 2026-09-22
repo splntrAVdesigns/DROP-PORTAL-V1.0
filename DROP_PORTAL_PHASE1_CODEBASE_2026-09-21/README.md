@@ -1,21 +1,14 @@
-# DROP:PORTAL — Phase 1 + Phase 1.5 Weekly Feed Bridge
+# DROP:PORTAL — Phase 1
+Portable static ES-module app. Serve `dist/` with any static server. No build dependency required. Sites hosting configured in `.openai/hosting.json`.
 
-Portable static ES-module app. Serve `dist/` with any static server. No build dependency required.
+Implemented: weekly dashboard, three priorities, lane bins, conditional wildcard/mix modules, archive and saved routes, local saved/heard/hidden actions, modal detail and tuner, base/weekly preference scopes, layout drag handles and keyboard move buttons, constrained sizes/reset/local persistence, singleton native audio player, seeking, volume, actual audio-derived waveforms, and responsive mobile sheets.
 
-Phase 1 implements the dashboard, local interactions/preferences/layout, singleton preview player, seeking, volume, real audio-derived waveforms, archive/saved routes, responsive sheets, and the locked ASCII rotational portal hero.
+Content limitation: supplied Phase 0 package contained plans only, no previous weekly recommendations or licensed audio. All seed artists/titles/scores/mix entries are explicitly illustrative. Three original synthesized 16-second audio studies demonstrate playback and actual PCM-derived peaks. No third-party recordings, fictitious commercial links, or fake waveform data. Commercial release/store/provider integration awaits verified seed records.
 
-## Phase 1.5 — Automated Weekly Drop Feed Bridge
+State: namespaced browser-local storage, no authentication/database/scheduled discovery. Weekly tuner overrides bind to the current drop ID. Track/recommendation fixtures are isolated in dist/data.js. Audio ownership/runtime is in player.js; persistence in storage.js. Preview links remain separate from store links.
 
-The dashboard now attempts to load the versioned publication manifest at `/weekly-feed/drops/index.json` through GitHub raw content. The newest valid published drop becomes THIS WEEK; older valid published drops become Archive. Invalid/unavailable network data fails safely back to the bundled Phase 1 demo collection.
+Phase 1.5.2B adds the Sites runtime deployment bridge. The browser loads the published GitHub weekly-feed manifest at runtime, validates each drop before applying it, and falls back first to the feed snapshot deployed with the Site and then to the original Phase 1 seed data. The deployed snapshot lives under dist/weekly-feed/; no repository credential is exposed to the browser.
 
-Bridge files:
-- `dist/feed.js` — fetch, validate, sort, and apply published drops.
-- `weekly-feed/drop.schema.json` — publication contract.
-- `weekly-feed/drops/index.json` — immutable-drop manifest.
-- `weekly-feed/README.md` — publisher rules.
+Phase 1.6 closes the recommendation-to-listening loop. Published cards expose verified provider destinations directly, combine Bandcamp listening/purchase destinations into one clear action, embed supported provider players such as SoundCloud without autoplay, show release/label/date/subgenre metadata, and retain honest unavailable states. Direct authorized audio continues through the singleton player and real waveform path. The publication gate at scripts/validate-feed.mjs rejects incomplete metadata, missing destinations, invalid preview contracts, duplicate IDs, and broken drop references before deployment.
 
-Publishing is intentionally separated from preview resolution. Weekly recommendation data may contain only authorized/licensed/owned preview metadata; unavailable previews remain explicit and store/listening links continue to work independently.
-
-The repository is now ready for the Wednesday ChatGPT curation task to create one immutable weekly JSON payload and append its published manifest entry.
-
-Local browser state remains namespaced under `drop-portal:`. No database or user authentication is introduced in Phase 1.5.
+Validation: JavaScript syntax and local asset/route/PCM-peak consistency checked. Interactive browser QA was not performed in this environment.
