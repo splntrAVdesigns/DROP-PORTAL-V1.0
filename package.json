@@ -1,0 +1,13 @@
+{
+  "name": "drop-portal-v1",
+  "private": true,
+  "version": "2.0.0",
+  "description": "DROP:PORTAL production shell for the curated weekly drops dashboard.",
+  "type": "module",
+  "scripts": {
+    "validate": "node scripts/validate-feed.mjs",
+    "check": "npm run validate && node scripts/check-static-shell.mjs",
+    "build": "npm run check && node scripts/build-static.mjs",
+    "test": "npm run check"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "framework": null,
+  "buildCommand": "npm run build",
+  "outputDirectory": "DROP_PORTAL_PHASE1_CODEBASE_2026-09-21/dist",
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/archive", "destination": "/archive/index.html" },
+    { "source": "/saved", "destination": "/saved/index.html" }
+  ]
+}
