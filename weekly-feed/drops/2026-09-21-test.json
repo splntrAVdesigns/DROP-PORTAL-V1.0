@@ -48,7 +48,7 @@
       "reason": "Shimmering synths, rolling breaks and emotional weight make this the strongest forward-facing entry in the test crate.",
       "startHere": true,
       "priority": 1,
-      "preview": null,
+      "preview": {"provider":"BANDCAMP","kind":"provider-embed","embedUrl":"https://bandcamp.com/EmbeddedPlayer/v=2/track=2903002485/size=small/bgcol=0b1114/linkcol=04d9ff/transparent=true/","usageBasis":"provider-authorized-embed","attribution":"Official Bandcamp player for this track."},
       "links": [{"kind":"store-listening","url":"https://shogunaudio.bandcamp.com/track/coming-down"}],
       "scores": {"production":96,"originality":91,"dancefloor":92,"headphones":95,"overall":94}
     },
@@ -67,7 +67,7 @@
       "reason": "A leftfield, experimental selection that pushes beyond conventional DnB framing while keeping jungle and bass DNA in view.",
       "startHere": false,
       "priority": 6,
-      "preview": null,
+      "preview": {"provider":"BANDCAMP","kind":"provider-embed","embedUrl":"https://bandcamp.com/EmbeddedPlayer/v=2/album=3411299478/size=small/bgcol=0b1114/linkcol=04d9ff/track=3615783288/transparent=true/","usageBasis":"provider-authorized-embed","attribution":"Official Bandcamp player for this track."},
       "links": [{"kind":"store-listening","url":"https://moonrhythms.bandcamp.com/album/transient"}],
       "scores": {"production":89,"originality":95,"dancefloor":82,"headphones":94,"overall":91}
     },
@@ -86,7 +86,7 @@
       "reason": "Abstract electronic and leftfield-bass cues fit the high discovery-depth setting and keep the experimental lane genuinely exploratory.",
       "startHere": false,
       "priority": 8,
-      "preview": null,
+      "preview": {"provider":"BANDCAMP","kind":"provider-embed","embedUrl":"https://bandcamp.com/EmbeddedPlayer/v=2/album=3411299478/size=small/bgcol=0b1114/linkcol=04d9ff/track=3299335765/transparent=true/","usageBasis":"provider-authorized-embed","attribution":"Official Bandcamp player for this track."},
       "links": [{"kind":"store-listening","url":"https://moonrhythms.bandcamp.com/album/transient"}],
       "scores": {"production":88,"originality":94,"dancefloor":81,"headphones":93,"overall":90}
     },
@@ -105,7 +105,7 @@
       "reason": "Precision drums, rolling groove and immersive low-end make this the clearest match for the test profile's Deep 70 emphasis.",
       "startHere": true,
       "priority": 2,
-      "preview": null,
+      "preview": {"provider":"BANDCAMP","kind":"provider-embed","embedUrl":"https://bandcamp.com/EmbeddedPlayer/v=2/album=2321657759/size=small/bgcol=0b1114/linkcol=04d9ff/track=3178595719/transparent=true/","usageBasis":"provider-authorized-embed","attribution":"Official Bandcamp player for this track."},
       "links": [{"kind":"store-listening","url":"https://dispatchrecordings.bandcamp.com/album/banh-bao-ep"}],
       "scores": {"production":96,"originality":92,"dancefloor":94,"headphones":95,"overall":95}
     },
@@ -124,7 +124,7 @@
       "reason": "Stripped-back groove, cavernous bass and hypnotic texture align tightly with deep-dig, dark and detail-focused tuning.",
       "startHere": false,
       "priority": 4,
-      "preview": null,
+      "preview": {"provider":"BANDCAMP","kind":"provider-embed","embedUrl":"https://bandcamp.com/EmbeddedPlayer/v=2/album=2321657759/size=small/bgcol=0b1114/linkcol=04d9ff/track=2452326054/transparent=true/","usageBasis":"provider-authorized-embed","attribution":"Official Bandcamp player for this track."},
       "links": [{"kind":"store-listening","url":"https://dispatchrecordings.bandcamp.com/album/banh-bao-ep"}],
       "scores": {"production":95,"originality":91,"dancefloor":93,"headphones":94,"overall":93}
     },
@@ -143,7 +143,7 @@
       "reason": "Subplate's deep, dark and minimal focus makes this a direct fit for Darkness 70 and the strongest lane weighting.",
       "startHere": true,
       "priority": 3,
-      "preview": null,
+      "preview": {"provider":"BANDCAMP","kind":"provider-embed","embedUrl":"https://bandcamp.com/EmbeddedPlayer/v=2/album=2493076358/size=small/bgcol=0b1114/linkcol=04d9ff/track=12621022/transparent=true/","usageBasis":"provider-authorized-embed","attribution":"Official Bandcamp player for this track."},
       "links": [{"kind":"store-listening","url":"https://subplaterecordings.bandcamp.com/album/red-wreath-cranium-subplate-237"}],
       "scores": {"production":93,"originality":89,"dancefloor":92,"headphones":91,"overall":92}
     },
@@ -200,7 +200,7 @@
       "reason": "A verified 150 BPM deep atmospheric jungle cut that balances break density with the test profile's strong discovery-depth setting.",
       "startHere": false,
       "priority": 9,
-      "preview": null,
+      "preview": {"provider":"BANDCAMP","kind":"provider-embed","embedUrl":"https://bandcamp.com/EmbeddedPlayer/v=2/album=253418677/size=small/bgcol=0b1114/linkcol=04d9ff/track=2602038835/transparent=true/","usageBasis":"provider-authorized-embed","attribution":"Official Bandcamp player for this track."},
       "links": [{"kind":"store-listening","url":"https://bukvasound.bandcamp.com/album/ljudas-ambient-understand-dub-fi-dub-ambient-remix-dubina-009"}],
       "scores": {"production":92,"originality":92,"dancefloor":87,"headphones":96,"overall":92}
     },
@@ -219,7 +219,7 @@
       "reason": "Rave stabs, heavy bass and a relentless rolling groove add movement while staying rooted in underground jungle-techno lineage.",
       "startHere": false,
       "priority": 10,
-      "preview": null,
+      "preview": {"provider":"BANDCAMP","kind":"provider-embed","embedUrl":"https://bandcamp.com/EmbeddedPlayer/v=2/track=4222040910/size=small/bgcol=0b1114/linkcol=04d9ff/transparent=true/","usageBasis":"provider-authorized-embed","attribution":"Official Bandcamp player for this track."},
       "links": [{"kind":"store-listening","url":"https://compounddubz.bandcamp.com/track/jake-hypastep-rush-rush"}],
       "scores": {"production":91,"originality":88,"dancefloor":95,"headphones":86,"overall":91}
     }
