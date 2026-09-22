@@ -10,27 +10,25 @@
 @media(prefers-reduced-motion:reduce){.preview-trigger:hover{transform:none}.preview-trigger.is-loading::before{animation:none}}
 
 
-/* Phase 2 closeout — desktop Bandcamp polish + provider activity */
-@keyframes provider-stream-scan{0%{background-position:200% 0}100%{background-position:-20% 0}}
+
+/* Phase 2 playback closeout — one live provider frame at a time */
+.provider-slot{position:relative;overflow:hidden}
+.provider-slot iframe{display:block;width:100%;height:42px;border:0;border-radius:4px;background:#333}
+.provider-activate{width:100%;min-height:42px;display:flex;align-items:center;gap:11px;padding:7px 10px;border:1px solid #2a4650;border-radius:4px;background:#121b1f;color:#d8e7eb;text-align:left}
+.provider-activate:hover{border-color:#04d9ff;background:#14262c}
+.provider-activate>b{width:28px;height:28px;display:grid;place-items:center;flex:none;border-radius:50%;background:#1b333b;color:#04d9ff;font:700 12px/1 monospace}
+.provider-activate>span{display:flex;flex-direction:column;gap:2px;font:700 10px/1.2 monospace;letter-spacing:.55px}
+.provider-activate small{color:#718990;font:9px/1.2 monospace;letter-spacing:.2px}
+.provider-unload{margin-top:5px;min-height:24px;padding:3px 7px;border:1px solid #263b43;border-radius:3px;background:#0d1518;color:#7f969e;font:700 8px/1 monospace;letter-spacing:.55px}
+.provider-unload:hover{color:#d8eef3;border-color:#40616c}
+.provider-slot.is-provider-live{border-color:#236a78;box-shadow:0 0 18px rgba(4,217,255,.08)}
+.provider-slot.is-provider-idle{box-shadow:none}
+.mix-provider{margin:0 24px}
+.mix-provider iframe{height:120px}
 @media(min-width:701px){
-  .track-preview{position:relative;overflow:hidden}
-  .track-preview iframe{background:#333}
-  .priority-row .track-preview iframe{width:calc(100% + 58px);max-width:none}
-  .track-preview.is-provider-active::after{
-    content:'';
-    position:absolute;
-    left:7px;
-    right:7px;
-    bottom:7px;
-    height:3px;
-    pointer-events:none;
-    border-radius:999px;
-    background:linear-gradient(90deg,rgba(4,217,255,.08),rgba(4,217,255,.72),rgba(176,102,255,.55),rgba(4,217,255,.12));
-    background-size:220% 100%;
-    box-shadow:0 0 8px rgba(4,217,255,.34);
-    animation:provider-stream-scan 2.2s linear infinite;
-  }
+  .provider-slot iframe{background:#333}
+  .priority-row .provider-slot iframe{width:100%;max-width:100%}
 }
-@media(min-width:701px) and (prefers-reduced-motion:reduce){
-  .track-preview.is-provider-active::after{animation:none;background-position:50% 0}
+@media(max-width:700px){
+  .mix-provider{margin:0 16px}
 }
