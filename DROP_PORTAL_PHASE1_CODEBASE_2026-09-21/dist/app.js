@@ -3,11 +3,32 @@ const heroStyles=document.createElement('link');heroStyles.rel='stylesheet';hero
 document.addEventListener('click',event=>{const link=event.target.closest?.('a[data-external]');if(!link)return;event.preventDefault();event.stopImmediatePropagation();const popup=window.open('','_blank');if(popup){popup.opener=null;popup.location.replace(link.href)}else window.location.assign(link.href)},true);
 const $=s=>document.querySelector(s);let interactions=read('interactions',{}),profiles=read('profiles',{base:{...defaults},weekly:null}),layout=read('layout',[{id:'start',size:'standard'},{id:'signal',size:'compact'},{id:'lane0',size:'wide'},{id:'lane1',size:'wide'},{id:'lane2',size:'wide'},{id:'lane3',size:'standard'},{id:'mix',size:'standard'}]);let editing=false,filter='all',detailId=null,tunerScope='base',draft={},dragged=null;const defaultLayout=JSON.parse(JSON.stringify([{id:'start',size:'standard'},{id:'signal',size:'compact'},{id:'lane0',size:'wide'},{id:'lane1',size:'wide'},{id:'lane2',size:'wide'},{id:'lane3',size:'standard'},{id:'mix',size:'standard'}]));
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-function releaseProviderPlayback(except=null){document.querySelectorAll('iframe[data-provider-player]').forEach(frame=>{if(frame!==except)frame.replaceWith(frame.cloneNode(true))})}
-function claimProviderPlayback(frame){if(!(frame instanceof HTMLIFrameElement)||!frame.matches('iframe[data-provider-player]'))return;if(player.current)player.stop();releaseProviderPlayback(frame)}
-function reconcileProviderFocus(){claimProviderPlayback(document.activeElement)}
+let providerOwner=null;
+function setProviderActive(frame,active){frame?.closest?.('.track-preview')?.classList.toggle('is-provider-active',active)}
+function releaseProviderPlayback(except=null){
+  document.querySelectorAll('iframe[data-provider-player]').forEach(frame=>{
+    if(frame===except)return;
+    setProviderActive(frame,false);
+    frame.replaceWith(frame.cloneNode(true));
+  });
+  if(providerOwner&&providerOwner!==except)providerOwner=null;
+}
+function claimProviderPlayback(frame){
+  if(!(frame instanceof HTMLIFrameElement)||!frame.matches('iframe[data-provider-player]'))return;
+  if(providerOwner===frame)return;
+  if(player.current)player.stop();
+  releaseProviderPlayback(frame);
+  providerOwner=frame;
+  setProviderActive(frame,true);
+}
+function reconcileProviderFocus(){
+  const frame=document.activeElement;
+  if(frame instanceof HTMLIFrameElement&&frame.matches('iframe[data-provider-player]'))claimProviderPlayback(frame);
+}
 window.addEventListener('blur',()=>setTimeout(reconcileProviderFocus,0));
 document.addEventListener('focusin',reconcileProviderFocus);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(reconcileProviderFocus,0)});
+window.setInterval(()=>{if(!document.hidden)reconcileProviderFocus()},120);
 let heroFrame=null,heroObserver=null,heroCleanup=null;
 function heroMarkup(){return `<section class="ascii-hero" aria-label="DROP:PORTAL signal visual"><canvas id="ascii-hero-canvas" role="img" aria-label="Full-width cyan ASCII texture with evolving rotational flow"></canvas><div class="ascii-hero-chrome" aria-hidden="true"><span>LIVE SIGNAL / 001</span><i></i><span>DROP:PORTAL</span></div><noscript><img src="/ascii-portal.png" alt="Cyan ASCII portal graphic"></noscript></section>`}
 function stopHero(){if(heroFrame!==null)cancelAnimationFrame(heroFrame);heroFrame=null;heroObserver?.disconnect();heroObserver=null;heroCleanup?.();heroCleanup=null}
