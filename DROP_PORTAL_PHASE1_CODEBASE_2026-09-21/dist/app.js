@@ -1,5 +1,6 @@
 import{lanes,tracks,drops,mixes,defaults,getFeedProfile}from'./data.js';import{read,write}from'./storage.js';import*as player from'./player.js';import{loadWeeklyFeed,feedState}from'./feed.js';import{destinations,primaryListen,primaryBuy,directPreview,embedPreview,formatReleaseDate}from'./destinations.js';
 const heroStyles=document.createElement('link');heroStyles.rel='stylesheet';heroStyles.href='/hero.css';document.head.append(heroStyles);
+document.addEventListener('click',event=>{const link=event.target.closest?.('a[data-external]');if(!link)return;event.preventDefault();event.stopImmediatePropagation();const popup=window.open(link.href,'_blank','noopener,noreferrer');if(!popup)window.location.assign(link.href)},true);
 const $=s=>document.querySelector(s);let interactions=read('interactions',{}),profiles=read('profiles',{base:{...defaults},weekly:null}),layout=read('layout',[{id:'start',size:'standard'},{id:'signal',size:'compact'},{id:'lane0',size:'wide'},{id:'lane1',size:'wide'},{id:'lane2',size:'wide'},{id:'lane3',size:'standard'},{id:'mix',size:'standard'}]);let editing=false,filter='all',detailId=null,tunerScope='base',draft={},dragged=null;const defaultLayout=JSON.parse(JSON.stringify([{id:'start',size:'standard'},{id:'signal',size:'compact'},{id:'lane0',size:'wide'},{id:'lane1',size:'wide'},{id:'lane2',size:'wide'},{id:'lane3',size:'standard'},{id:'mix',size:'standard'}]));
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 let heroFrame=null,heroObserver=null,heroCleanup=null;
@@ -49,15 +50,15 @@ const buttons=t=>`<div class="actions"><button data-action="saved" data-id="${t.
 const playButton=t=>{const preview=directPreview(t);return preview?`<button class="preview-trigger" data-play="${esc(t.id)}" data-provider="${esc(preview.provider)}" aria-label="Play preview of ${esc(t.title)}">▶</button>`:''};
 function auditionControl(t){const direct=directPreview(t),embedded=embedPreview(t);if(direct)return playButton(t);if(embedded?.provider==='BANDCAMP')return`<div class="track-preview"><span>OFFICIAL TRACK PREVIEW · BANDCAMP</span><iframe src="${esc(embedded.url)}" title="Play ${esc(t.title)} by ${esc(t.artistName)}" loading="lazy" allow="autoplay"></iframe></div>`;return`<span class="preview-unavailable">${t.releaseDate>new Date().toISOString().slice(0,10)?`PREVIEW UNLOCKS ${esc(formatReleaseDate(t.releaseDate))}`:'PROVIDER PREVIEW UNAVAILABLE'}</span>`}
 const trackMeta=t=>[Number.isFinite(t.bpm)?t.bpm+' BPM':null,Number.isFinite(t.confidence)?t.confidence+'% CONFIDENCE':null].filter(Boolean).join(' · ');
-const sourceLinks=t=>destinations(t).map((d,i)=>`<a class="source-link" href="${esc(d.url)}" target="_top" rel="noopener noreferrer">${i?'SOURCE '+(i+1):'VERIFIED SOURCE'} · ${esc(d.provider)} ↗</a>`).join('');
+const sourceLinks=t=>destinations(t).map((d,i)=>`<a class="source-link" data-external href="${esc(d.url)}" target="_blank" rel="noopener noreferrer">${i?'SOURCE '+(i+1):'VERIFIED SOURCE'} · ${esc(d.provider)} ↗</a>`).join('');
 function releaseTags(t){return `<div class="track-tags">${[t.subgenre,t.label,formatReleaseDate(t.releaseDate)].filter(Boolean).map(value=>`<span>${esc(value)}</span>`).join('')}</div>`}
 function destinationActions(t,includeDetails=true,includePreview=includeDetails){
   const listen=primaryListen(t),buy=primaryBuy(t),same=listen&&buy&&listen.url===buy.url;
   let html=includePreview?auditionControl(t):'';
-  if(same)html+=`<a class="destination listen" href="${esc(listen.url)}" target="_top" rel="noopener noreferrer">LISTEN / BUY <small>${esc(listen.provider)}</small> ↗</a>`;
+  if(same)html+=`<a class="destination listen" data-external href="${esc(listen.url)}" target="_blank" rel="noopener noreferrer">LISTEN / BUY <small>${esc(listen.provider)}</small> ↗</a>`;
   else{
-    if(listen)html+=`<a class="destination listen" href="${esc(listen.url)}" target="_top" rel="noopener noreferrer">LISTEN <small>${esc(listen.provider)}</small> ↗</a>`;
-    if(buy)html+=`<a class="destination buy" href="${esc(buy.url)}" target="_top" rel="noopener noreferrer">BUY <small>${esc(buy.provider)}</small> ↗</a>`;
+    if(listen)html+=`<a class="destination listen" data-external href="${esc(listen.url)}" target="_blank" rel="noopener noreferrer">LISTEN <small>${esc(listen.provider)}</small> ↗</a>`;
+    if(buy)html+=`<a class="destination buy" data-external href="${esc(buy.url)}" target="_blank" rel="noopener noreferrer">BUY <small>${esc(buy.provider)}</small> ↗</a>`;
   }
   if(!listen)html+='<span class="availability">NO LISTENING DESTINATION</span>';
   if(includeDetails)html+=`<button class="details-link" data-detail="${esc(t.id)}">DETAILS +</button>`;
