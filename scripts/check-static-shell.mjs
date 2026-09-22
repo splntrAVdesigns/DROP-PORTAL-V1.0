@@ -32,10 +32,24 @@ if (unmanagedFrames.length) {
   console.error(`[shell] FAIL: ${unmanagedFrames.length} autoplay provider frame(s) bypass playback ownership`);
   process.exit(1);
 }
-if (!appSource.includes('releaseProviderPlayback();player.play(') ||
-    !appSource.includes("providerOwner===frame") ||
-    !appSource.includes("reconcileProviderFocus()},120")) {
-  console.error('[shell] FAIL: preview playback ownership arbitration is missing');
+if (!appSource.includes('let activeProviderSlot=null') ||
+    !appSource.includes('function providerShell(') ||
+    !appSource.includes('data-provider-activate') ||
+    !appSource.includes('if(b.dataset.providerActivate)') ||
+    !appSource.includes('stopProviderPlayback();render();player.play(')) {
+  console.error('[shell] FAIL: single provider playback shell is missing');
+  process.exit(1);
+}
+if (appSource.includes('providerOwner===frame') || appSource.includes('reconcileProviderFocus()},120')) {
+  console.error('[shell] FAIL: obsolete iframe focus ownership logic is still present');
+  process.exit(1);
+}
+
+const storageSource = fs.readFileSync(path.join(dist, 'storage.js'), 'utf8');
+if (!storageSource.includes("COOKIE_PREFIX='drop_portal_'") ||
+    !storageSource.includes('localStorage.setItem') ||
+    !storageSource.includes('writeCookie(key,raw)')) {
+  console.error('[shell] FAIL: durable interaction persistence fallback is missing');
   process.exit(1);
 }
 
