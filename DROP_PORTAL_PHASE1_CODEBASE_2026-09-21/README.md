@@ -13,4 +13,6 @@ Phase 1.6 closes the recommendation-to-listening loop. Published cards expose ve
 
 Phase 1.6.1 adds per-track runtime audition lookup. The dashboard resolves short, provider-authorized Apple Music previews first and Deezer previews second, accepts only strict artist/title matches, and streams them directly without downloading or rehosting. The cyan preview transport is visually and functionally separate from the verified Listen / Buy destination. Unmatched tracks remain explicit rather than receiving a guessed clip.
 
+Phase 1.6.2 replaces the browser-side catalog lookup with official Bandcamp per-track players resolved from each recommendation's verified source page. This removes the indefinite loading state and keeps playback under the provider's authorization and stream limits. Eight current recommendations expose published audio; the two Dispatch Blueprints 029 preorder tracks remain explicitly unavailable until their provider publishes audio. Destination links use top-level navigation so they work from both the standalone Site and its embedded mobile preview.
+
 Validation: JavaScript syntax and local asset/route/PCM-peak consistency checked. Interactive browser QA was not performed in this environment.
