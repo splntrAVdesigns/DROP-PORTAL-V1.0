@@ -11,4 +11,6 @@ Phase 1.5.2B adds the Sites runtime deployment bridge. The browser loads the pub
 
 Phase 1.6 closes the recommendation-to-listening loop. Published cards expose verified provider destinations directly, combine Bandcamp listening/purchase destinations into one clear action, embed supported provider players such as SoundCloud without autoplay, show release/label/date/subgenre metadata, and retain honest unavailable states. Direct authorized audio continues through the singleton player and real waveform path. The publication gate at scripts/validate-feed.mjs rejects incomplete metadata, missing destinations, invalid preview contracts, duplicate IDs, and broken drop references before deployment.
 
+Phase 1.6.1 adds per-track runtime audition lookup. The dashboard resolves short, provider-authorized Apple Music previews first and Deezer previews second, accepts only strict artist/title matches, and streams them directly without downloading or rehosting. The cyan preview transport is visually and functionally separate from the verified Listen / Buy destination. Unmatched tracks remain explicit rather than receiving a guessed clip.
+
 Validation: JavaScript syntax and local asset/route/PCM-peak consistency checked. Interactive browser QA was not performed in this environment.
