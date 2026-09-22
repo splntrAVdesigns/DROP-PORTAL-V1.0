@@ -8,3 +8,29 @@
 .preview-trigger{--preview-glow:rgba(4,217,255,.2);position:relative;isolation:isolate;min-width:112px;min-height:42px;display:inline-flex;align-items:center;justify-content:flex-start;gap:10px;padding:7px 12px 7px 8px;border:1px solid #04d9ff;border-radius:999px;background:linear-gradient(135deg,#0b303a,#08181d);color:#eaffff;box-shadow:0 0 0 1px rgba(4,217,255,.08) inset,0 0 18px var(--preview-glow);font:700 0 monospace;overflow:visible}.preview-trigger::before{content:'▶';width:28px;height:28px;display:grid;place-items:center;flex:none;border-radius:50%;background:#04d9ff;color:#041013;font:700 12px/1 monospace;box-shadow:0 0 13px rgba(4,217,255,.5)}.preview-trigger::after{content:'PREVIEW  ·  0:30';font:700 10px/1.15 monospace;letter-spacing:.6px;white-space:nowrap}.preview-trigger:hover{background:linear-gradient(135deg,#104856,#0a2026);border-color:#76efff;transform:translateY(-1px)}.preview-trigger:focus-visible{outline:2px solid #fff;outline-offset:3px}.preview-trigger.is-loading{pointer-events:none;opacity:.68;border-color:#3e6a73;box-shadow:none}.preview-trigger.is-loading::before{content:'';border:2px solid #31515a;border-top-color:#04d9ff;background:transparent;animation:preview-spin .8s linear infinite}.preview-trigger.is-loading::after{content:'FINDING CLIP…'}.preview-trigger.is-loading>.preview-spinner{display:none}.preview-unavailable{min-height:42px;display:inline-flex;align-items:center;padding:0 10px;border:1px dashed #34474e;border-radius:999px;color:#7f939a;font:700 9px/1.2 monospace;letter-spacing:.45px}.destination-actions>.destination{min-height:42px}.destination-actions>.details-link{min-height:42px}.wave-progress{height:54px;position:relative;display:flex;align-items:center;padding:0 14px;border:1px solid #294149;border-radius:4px;background:linear-gradient(90deg,rgba(4,217,255,.34) var(--preview-progress),#102128 var(--preview-progress));overflow:hidden}.wave-progress::after{content:'';position:absolute;left:var(--preview-progress);top:0;bottom:0;width:2px;background:#04d9ff;box-shadow:0 0 10px #04d9ff}.wave-progress span{position:relative;z-index:1;color:#aac0c7;font:9px monospace;letter-spacing:.7px}@keyframes preview-spin{to{transform:rotate(360deg)}}
 @media(max-width:700px){.destination-actions{grid-template-columns:1fr 1fr}.track-preview{grid-column:1/-1}.preview-trigger,.preview-unavailable{grid-column:1/-1;width:100%;min-width:0}.destination-actions>.destination{grid-column:1/2}.destination-actions>.details-link{grid-column:2/3}.priority-row .destination-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}.priority-row .track-preview,.priority-row .preview-trigger,.priority-row .preview-unavailable{grid-column:1/-1}.priority-row .destination{grid-column:1/2}.priority-row .details-link{grid-column:2/3}}
 @media(prefers-reduced-motion:reduce){.preview-trigger:hover{transform:none}.preview-trigger.is-loading::before{animation:none}}
+
+
+/* Phase 2 closeout — desktop Bandcamp polish + provider activity */
+@keyframes provider-stream-scan{0%{background-position:200% 0}100%{background-position:-20% 0}}
+@media(min-width:701px){
+  .track-preview{position:relative;overflow:hidden}
+  .track-preview iframe{background:#333}
+  .priority-row .track-preview iframe{width:calc(100% + 58px);max-width:none}
+  .track-preview.is-provider-active::after{
+    content:'';
+    position:absolute;
+    left:7px;
+    right:7px;
+    bottom:7px;
+    height:3px;
+    pointer-events:none;
+    border-radius:999px;
+    background:linear-gradient(90deg,rgba(4,217,255,.08),rgba(4,217,255,.72),rgba(176,102,255,.55),rgba(4,217,255,.12));
+    background-size:220% 100%;
+    box-shadow:0 0 8px rgba(4,217,255,.34);
+    animation:provider-stream-scan 2.2s linear infinite;
+  }
+}
+@media(min-width:701px) and (prefers-reduced-motion:reduce){
+  .track-preview.is-provider-active::after{animation:none;background-position:50% 0}
+}
