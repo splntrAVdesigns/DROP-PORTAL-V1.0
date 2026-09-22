@@ -42,7 +42,7 @@ export async function loadWeeklyFeed(){
     const entries=[...manifest.drops].filter(x=>x&&x.status==='published'&&x.url).sort((a,b)=>(b.publishedAt||'').localeCompare(a.publishedAt||''));
     if(!entries.length)throw Error('No published drops');
     const payloads=[];
-    for(const entry of entries){try{payloads.push(validatePayload(await json(new URL(entry.url,manifestBase).href)))}catch(e){console.warn('[DROP:PORTAL] skipped invalid drop',entry.id,e)}}
+    for(const entry of entries){try{const dropUrl=new URL(entry.url,manifestBase);dropUrl.searchParams.set('v',manifest.updatedAt||entry.publishedAt||Date.now());payloads.push(validatePayload(await json(dropUrl.href)))}catch(e){console.warn('[DROP:PORTAL] skipped invalid drop',entry.id,e)}}
     if(!payloads.length)throw Error('No valid published drops');
     applyFeed(payloads);
     const current=payloads[0],withPreview=current.tracks.filter(t=>t.preview).length,withDestinations=current.tracks.filter(t=>t.links.length).length;
