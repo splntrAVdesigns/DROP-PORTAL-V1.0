@@ -32,3 +32,10 @@
 @media(max-width:700px){
   .mix-provider{margin:0 16px}
 }
+
+
+/* Phase 2.1 — persistent board status flags */
+.track-status-flags{display:flex;flex-wrap:wrap;gap:8px;margin-top:7px}
+.track-status-flags span{display:inline-flex;align-items:center;min-height:24px;padding:3px 7px;border:1px solid rgba(4,217,255,.34);border-radius:3px;background:rgba(4,217,255,.055);color:#04d9ff;font:700 9px/1 monospace;letter-spacing:.65px}
+.priority-row>.track-status-flags{grid-column:2/4;margin-top:3px}
+@media(max-width:700px){.priority-row>.track-status-flags{grid-column:2/4}.track-status-flags span{font-size:10px}}
