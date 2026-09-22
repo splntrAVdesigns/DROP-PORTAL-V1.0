@@ -23,6 +23,7 @@ function normalizeEmbedUrl(value,provider){
     let href=url.href;
     href=/\/bgcol=[^/]+/.test(href)?href.replace(/\/bgcol=[^/]+/,'/bgcol=333333'):href.replace(/\/$/,'/bgcol=333333/');
     href=/\/linkcol=[^/]+/.test(href)?href.replace(/\/linkcol=[^/]+/,'/linkcol=04d9ff'):href.replace(/\/$/,'/linkcol=04d9ff/');
+    href=/\/transparent=[^/]+/.test(href)?href.replace(/\/transparent=[^/]+/,'/transparent=false'):href.replace(/\/$/,'/transparent=false/');
     return href;
   }
   return url.href;
