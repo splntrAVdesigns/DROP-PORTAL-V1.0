@@ -15,12 +15,7 @@
 .provider-slot{position:relative;overflow:hidden}
 .provider-frame-wrap{position:relative;overflow:hidden;border-radius:4px;background:#333}
 .provider-slot iframe{display:block;width:100%;height:42px;border:0;border-radius:4px;background:#333}
-.provider-edge-mask{position:absolute;right:0;top:0;bottom:0;width:68px;background:#333;pointer-events:none}
-.provider-signal{height:7px;display:grid;grid-template-columns:repeat(12,1fr);align-items:center;gap:3px;margin-top:5px;padding:0 2px}
-.provider-signal i{display:block;height:3px;border-radius:999px;background:linear-gradient(90deg,#04d9ff,#52e5ff);box-shadow:0 0 5px rgba(4,217,255,.28)}
-.provider-signal i:nth-child(3n+1){height:5px;opacity:.72}
-.provider-signal i:nth-child(3n+2){height:2px;opacity:.46}
-.provider-signal i:nth-child(3n){height:4px;opacity:.88}
+.provider-edge-mask{position:absolute;right:0;top:0;bottom:0;width:92px;background:#333;pointer-events:none}
 .provider-activate{width:100%;min-height:42px;display:flex;align-items:center;gap:11px;padding:7px 10px;border:1px solid #2a4650;border-radius:4px;background:#121b1f;color:#d8e7eb;text-align:left}
 .provider-activate:hover{border-color:#04d9ff;background:#14262c}
 .provider-activate>b{width:28px;height:28px;display:grid;place-items:center;flex:none;border-radius:50%;background:#1b333b;color:#04d9ff;font:700 12px/1 monospace}
@@ -48,3 +43,33 @@
 .track-status-flags span{display:inline-flex;align-items:center;min-height:24px;padding:3px 7px;border:1px solid rgba(4,217,255,.34);border-radius:3px;background:rgba(4,217,255,.055);color:#04d9ff;font:700 9px/1 monospace;letter-spacing:.65px}
 .priority-row>.track-status-flags{grid-column:2/4;margin-top:3px}
 @media(max-width:700px){.priority-row>.track-status-flags{grid-column:2/4}.track-status-flags span{font-size:10px}}
+
+
+/* Phase 2.3 — board crate controls + sticky provider dock */
+.board-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:7px}
+.board-actions .actions{display:flex;gap:6px}
+.board-actions .actions button{min-height:32px;padding:6px 9px;border:1px solid #2a3d45;color:#90a2a9;background:#0e171b}
+.board-actions .actions button.active{color:#04d9ff;border-color:rgba(4,217,255,.45);background:rgba(4,217,255,.07)}
+.board-actions .details-link{min-height:32px;margin-left:auto}
+.priority-row>.board-actions{grid-column:2/4}
+.priority-row>.track-preview{grid-column:2/4}
+.provider-dock-inner{min-height:58px}
+.provider-dock-status{flex:1;min-width:180px;padding-left:18px;border-left:1px solid #29414b}
+.provider-dock-status span{display:block;color:#04d9ff;font:700 10px/1.2 monospace;letter-spacing:.7px}
+.provider-dock-status small{display:block;margin-top:5px;color:#82969e;font:10px/1.25 monospace}
+.provider-dock-focus,.provider-dock-close{min-height:38px;border-color:#31505a}
+.provider-dock-focus{color:#b9dfe6;background:#102027;font:700 9px monospace;letter-spacing:.55px}
+.provider-dock-close{width:42px;padding:0;border-radius:50%;font-size:20px}
+@media(max-width:700px){
+  .provider-edge-mask{width:56px}
+  .priority-row>.track-preview,.priority-row>.board-actions,.priority-row>.track-status-flags{grid-column:2/4}
+  .board-actions{display:grid;grid-template-columns:1fr auto;width:100%}
+  .board-actions .actions{grid-column:1/2}
+  .board-actions .actions button{min-height:38px}
+  .board-actions .details-link{grid-column:2/3;min-height:38px;margin-left:0}
+  .provider-dock-inner{display:grid;grid-template-columns:1fr auto;gap:8px 12px}
+  .provider-dock-inner .dock-title{width:auto}
+  .provider-dock-status{grid-column:1/-1;order:3;padding:8px 0 0;border-left:0;border-top:1px solid #29414b}
+  .provider-dock-focus{grid-column:1/2}
+  .provider-dock-close{grid-column:2/3;grid-row:1/3;align-self:center}
+}
