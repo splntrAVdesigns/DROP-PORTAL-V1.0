@@ -5,7 +5,7 @@
   "description": "DROP:PORTAL production shell for the curated weekly drops dashboard.",
   "type": "module",
   "scripts": {
-    "validate": "node scripts/validate-feed.mjs",
+    "validate": "node scripts/validate-feed.mjs && node scripts/validate-inquiry.mjs",
     "check": "npm run validate && node scripts/check-static-shell.mjs",
     "build": "npm run check && node scripts/build-static.mjs",
     "test": "npm run check"
