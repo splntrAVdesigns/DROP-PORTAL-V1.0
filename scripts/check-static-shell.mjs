@@ -25,4 +25,16 @@ for (const file of jsFiles) {
   }
 }
 
+const appSource = fs.readFileSync(path.join(dist, 'app.js'), 'utf8');
+const autoplayFrames = [...appSource.matchAll(/<iframe[^>]*allow="autoplay"[^>]*>/g)].map((match) => match[0]);
+const unmanagedFrames = autoplayFrames.filter((frame) => !frame.includes('data-provider-player'));
+if (unmanagedFrames.length) {
+  console.error(`[shell] FAIL: ${unmanagedFrames.length} autoplay provider frame(s) bypass playback ownership`);
+  process.exit(1);
+}
+if (!appSource.includes('releaseProviderPlayback();player.play(') || !appSource.includes('claimProviderPlayback(document.activeElement)')) {
+  console.error('[shell] FAIL: preview playback ownership arbitration is missing');
+  process.exit(1);
+}
+
 console.log(`[shell] PASS: ${required.length} required assets and ${jsFiles.length} JavaScript modules checked`);
