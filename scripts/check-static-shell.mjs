@@ -45,6 +45,17 @@ if (appSource.includes('providerOwner===frame') || appSource.includes('reconcile
   process.exit(1);
 }
 
+if (appSource.includes('class="provider-signal"')) {
+  console.error('[shell] FAIL: provider embed exposes a fake audio meter');
+  process.exit(1);
+}
+if (!appSource.includes('function boardActions(') ||
+    !appSource.includes('PROVIDER PLAYER LOADED') ||
+    !appSource.includes('data-provider-focus')) {
+  console.error('[shell] FAIL: provider dock or board crate controls are missing');
+  process.exit(1);
+}
+
 const storageSource = fs.readFileSync(path.join(dist, 'storage.js'), 'utf8');
 if (!storageSource.includes("COOKIE_PREFIX='drop_portal_'") ||
     !storageSource.includes('localStorage.setItem') ||
