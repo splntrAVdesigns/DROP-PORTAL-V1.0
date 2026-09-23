@@ -1,5 +1,5 @@
-import{lanes,tracks,drops,mixes,defaults,getFeedProfile}from'./data.js';import{read,write}from'./storage.js';import*as player from'./player.js';import{loadWeeklyFeed,feedState}from'./feed.js';import{destinations,primaryListen,primaryBuy,directPreview,embedPreview,formatReleaseDate}from'./destinations.js';import{scheduleState,loadSchedule,saveSchedule,formatNextDrop,nextDropFields,scheduleMode}from'./schedule.js';
-const BUILD_ID='P2.7-dynamic-drop-scheduling-2026-09-23';window.__DROP_PORTAL_BUILD__=BUILD_ID;
+import{lanes,tracks,drops,mixes,defaults,getFeedProfile}from'./data.js';import{read,write}from'./storage.js';import*as player from'./player.js';import{loadWeeklyFeed,feedState}from'./feed.js';import{destinations,primaryListen,primaryBuy,directPreview,embedPreview,formatReleaseDate}from'./destinations.js';import{scheduleState,loadSchedule,saveSchedule,formatNextDrop,nextDropFields,scheduleMode}from'./schedule.js';import{saveInquiry}from'./inquiry.js';
+const BUILD_ID='P2.7-secure-tuner-publication-control-2026-09-23';window.__DROP_PORTAL_BUILD__=BUILD_ID;
 const heroStyles=document.createElement('link');heroStyles.rel='stylesheet';heroStyles.href='/hero.css';document.head.append(heroStyles);
 document.addEventListener('click',event=>{const link=event.target.closest?.('a[data-external]');if(!link)return;event.preventDefault();event.stopImmediatePropagation();const popup=window.open('','_blank');if(popup){popup.opener=null;popup.location.replace(link.href)}else window.location.assign(link.href)},true);
 const $=s=>document.querySelector(s);let interactions=read('interactions',{}),profiles=read('profiles',{base:{...defaults},weekly:null}),layout=read('layout',[{id:'start',size:'standard'},{id:'signal',size:'compact'},{id:'lane0',size:'wide'},{id:'lane1',size:'wide'},{id:'lane2',size:'wide'},{id:'lane3',size:'standard'},{id:'mix',size:'standard'}]);let editing=false,filter='all',detailId=null,tunerScope='base',draft={},dragged=null;const defaultLayout=JSON.parse(JSON.stringify([{id:'start',size:'standard'},{id:'signal',size:'compact'},{id:'lane0',size:'wide'},{id:'lane1',size:'wide'},{id:'lane2',size:'wide'},{id:'lane3',size:'standard'},{id:'mix',size:'standard'}]));
@@ -109,7 +109,7 @@ function header(title,sub,drop){
   const overridden=!!schedule?.override;
   return `<div class="drop-heading"><div><div class="eyebrow">${drop?'WEEKLY TRANSMISSION / '+drop.period:'YOUR PERSONAL CRATE'}</div><h1>${title}</h1><p>${sub}</p></div><div class="drop-heading-meta"><span class="seed">${live?(test?'TEST DROP · LIVE FEED':'LIVE FEED · GITHUB'):'PHASE 1 · DEMO FALLBACK'}</span><span class="next-drop-flag ${overridden?'is-override':''}"><small>NEXT DROP</small><b>${esc(next)}</b>${overridden?'<i>SCHEDULE OVERRIDE</i>':''}</span></div></div>`}
 function render(){let path=location.pathname.replace(/\/$/,'')||'/';document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('active',a.dataset.route==='/'?path==='/':path.startsWith(a.dataset.route)));$('#saved-count').textContent=Object.values(interactions).filter(i=>i.saved).length;$('#edit').textContent=editing?'✓ DONE':'⊞ EDIT LAYOUT';$('#edit').hidden=path==='/archive'||path==='/saved';let html='';if(path==='/archive'){html=header('The archive','Previous transmissions. Good music doesn’t expire.')+`<div class="archive-list">${drops.slice(1).map(d=>`<a class="archive-card" href="/archive/${d.id}"><span class="eyebrow">${d.period}</span><h2>Drop ${d.id} <span class="cyan">↗</span></h2><p>${d.ids.length} tracks · Demo collection</p><span class="track-meta">SUB STUDIES / LOOP THEORY / PHASE STUDIES</span></a>`).join('')}</div>`}else if(path==='/saved'){let ts=tracks.filter(t=>interactions[t.id]?.saved&&!interactions[t.id]?.hidden);let ms=mixes.filter(t=>interactions[t.id]?.saved);html=header('Saved for later','Your selections, ready for another listen.')+`<div class="filters">${['all','tracks','mixes'].map(f=>`<button data-filter="${f}" class="${f===filter?'active':''}">${f[0].toUpperCase()+f.slice(1)}</button>`).join('')}</div>`;let items=(filter!=='mixes'?ts.map(card).join(''):'')+(filter!=='tracks'?ms.map(m=>`<article class="track"><span class="artist">${m.artistName}</span><h3>${m.title}</h3><p>${m.reason}</p>${buttons(m)}</article>`).join(''):'');html+=items?`<section class="panel wide"><div class="bin-grid">${items}</div></section>`:'<div class="panel empty"><h2>Your next favorite belongs here.</h2><p>Save a track or mix from This Week to start your crate.</p><a href="/" class="cyan">Explore this week ↗</a></div>'}else{let d=path.startsWith('/archive/')?drops.find(d=>d.id===path.split('/')[2]):drops[0];if(!d){html='<div class="empty"><h1>Drop not found</h1><a href="/archive">Back to archive</a></div>'}else{let ts=d.ids.map(id=>tracks.find(t=>t.id===id)).filter(t=>t&&!interactions[t.id]?.hidden);html=(d===drops[0]?heroMarkup():'')+header(`This week’s drop <span>/ ${d.id}</span>`,'A little further underground. Start with three, dig into the rest.',d)+(editing?'<div class="editbar"><span>Move modules using handles or ↑ ↓. Changes save automatically.</span><button id="reset-layout">Reset layout</button></div>':'')+`<div class="grid ${editing?'editing':''}">${layout.map(m=>module(m,ts)).join('')}</div>`;if(d.ids.some(id=>interactions[id]?.hidden))html+='<p><button id="restore">Restore hidden tracks</button></p>'}}html+=`<p class="footer-note">${feedState.source==='github'?'LIVE WEEKLY FEED · Published recommendations are loaded from the versioned DROP:PORTAL GitHub feed.':'DEMO FALLBACK · Illustrative artists, titles, scores and mixes. Three original synthesized preview studies.'}<br>Preview availability is source-dependent. Preferences and saves stay in this browser.</p>`;$('#app').innerHTML=html;initHero();updatePlayer()}
-function route(path){stopProviderPlayback();history.pushState({},'',path);editing=false;render();window.scrollTo(0,0)}document.addEventListener('click',e=>{const a=e.target.closest('a');if(a&&a.origin===location.origin&&!e.ctrlKey&&!e.metaKey){e.preventDefault();route(a.pathname);return}const b=e.target.closest('button');if(!b)return;if(b.dataset.providerActivate){if(player.current)player.stop();activeProviderSlot=b.dataset.providerActivate;providerDockSlot=null;render();return}if(b.dataset.providerFocus){document.querySelector(`[data-provider-slot="${CSS.escape(b.dataset.providerFocus)}"]`)?.scrollIntoView({behavior:'smooth',block:'center'});return}if(b.dataset.providerUnload){stopProviderPlayback();render();return}if(b.dataset.play){stopProviderPlayback();render();player.play(tracks.find(t=>t.id===b.dataset.play));return}if(b.dataset.detail){detail(b.dataset.detail);return}if(b.dataset.action){act(b.dataset.id,b.dataset.action);return}if(b.dataset.filter){filter=b.dataset.filter;render();return}if(b.dataset.move){move(b.dataset.moduleId,Number(b.dataset.move));return}if(b.dataset.close){$('#'+b.dataset.close).close();if(b.dataset.close==='detail')detailId=null;return}if(b.id==='save-schedule'){saveDropSchedule();return}if(b.id==='edit'){editing=!editing;render()}if(b.id==='reset-layout'){layout=JSON.parse(JSON.stringify(defaultLayout));persist('layout',layout);render();toast('Default layout restored')}if(b.id==='restore'){Object.values(interactions).forEach(i=>i.hidden=false);persist('interactions',interactions);render()}if(b.id==='tuner'){tunerScope='base';openTuner()}if(b.dataset.scope){captureDraft();tunerScope=b.dataset.scope;openTuner(false)}if(b.id==='save-tuner'){captureDraft();profiles[tunerScope]=draft[tunerScope];if(tunerScope==='weekly')profiles.weekly.week=drops[0].id;persist('profiles',profiles);$('#tuner-dialog').close();render();toast('Profile saved · applies to future curation')}if(b.id==='clear-week'){profiles.weekly=null;persist('profiles',profiles);$('#tuner-dialog').close();render();toast('This week now uses your base profile')}if(b.id==='dock-close')player.stop()});
+function route(path){stopProviderPlayback();history.pushState({},'',path);editing=false;render();window.scrollTo(0,0)}document.addEventListener('click',e=>{const a=e.target.closest('a');if(a&&a.origin===location.origin&&!e.ctrlKey&&!e.metaKey){e.preventDefault();route(a.pathname);return}const b=e.target.closest('button');if(!b)return;if(b.dataset.providerActivate){if(player.current)player.stop();activeProviderSlot=b.dataset.providerActivate;providerDockSlot=null;render();return}if(b.dataset.providerFocus){document.querySelector(`[data-provider-slot="${CSS.escape(b.dataset.providerFocus)}"]`)?.scrollIntoView({behavior:'smooth',block:'center'});return}if(b.dataset.providerUnload){stopProviderPlayback();render();return}if(b.dataset.play){stopProviderPlayback();render();player.play(tracks.find(t=>t.id===b.dataset.play));return}if(b.dataset.detail){detail(b.dataset.detail);return}if(b.dataset.action){act(b.dataset.id,b.dataset.action);return}if(b.dataset.filter){filter=b.dataset.filter;render();return}if(b.dataset.move){move(b.dataset.moduleId,Number(b.dataset.move));return}if(b.dataset.close){$('#'+b.dataset.close).close();if(b.dataset.close==='detail')detailId=null;return}if(b.id==='save-schedule'){saveDropSchedule();return}if(b.id==='edit'){editing=!editing;render()}if(b.id==='reset-layout'){layout=JSON.parse(JSON.stringify(defaultLayout));persist('layout',layout);render();toast('Default layout restored')}if(b.id==='restore'){Object.values(interactions).forEach(i=>i.hidden=false);persist('interactions',interactions);render()}if(b.id==='tuner'){tunerScope='base';openTuner()}if(b.dataset.scope){captureDraft();tunerScope=b.dataset.scope;openTuner(false)}if(b.id==='save-tuner'){saveTunerProfile();return}if(b.id==='clear-week'){clearWeeklyProfile();return}if(b.id==='dock-close')player.stop()});
 function move(id,delta){let i=layout.findIndex(m=>m.id===id),j=i+delta;if(j<0||j>=layout.length)return;[layout[i],layout[j]]=[layout[j],layout[i]];persist('layout',layout);render();toast('Module moved')}
 document.addEventListener('change',e=>{if(e.target.dataset.size){layout.find(m=>m.id===e.target.dataset.size).size=e.target.value;persist('layout',layout);render()}});document.addEventListener('dragstart',e=>{let handle=e.target.closest('[data-drag]');if(!editing||!handle)return;dragged=handle.dataset.drag;e.dataTransfer.setData('text/plain',dragged);e.dataTransfer.effectAllowed='move'});document.addEventListener('dragover',e=>{if(editing&&dragged&&e.target.closest('[data-module]'))e.preventDefault()});document.addEventListener('drop',e=>{let target=e.target.closest('[data-module]');if(!editing||!dragged||!target)return;e.preventDefault();let i=layout.findIndex(m=>m.id===dragged),j=layout.findIndex(m=>m.id===target.dataset.module);let[m]=layout.splice(i,1);layout.splice(j,0,m);dragged=null;persist('layout',layout);render()});document.addEventListener('dragend',()=>dragged=null);
 function detail(id,show=true){let t=tracks.find(t=>t.id===id);if(!t)return;detailId=id;const live=feedState.source==='github'&&!t.demo;const releaseInfo=live?`<div class="release-facts"><span><small>RELEASE</small>${esc(t.release||'Not supplied')}</span><span><small>LABEL</small>${esc(t.label||'Not supplied')}</span><span><small>DATE</small>${esc(formatReleaseDate(t.releaseDate)||'Not supplied')}</span><span><small>STYLE</small>${esc(t.subgenre||lanes[t.lane])}</span></div>${destinationActions(t,false)}<div class="source-list">${sourceLinks(t)||'<span class="availability">NO VERIFIED SOURCE SUPPLIED</span>'}</div>`:'<p class="notice">Prototype entry. Artist, title and grading are illustrative. Release date, label and purchase links have not been supplied.</p>';$('#detail').innerHTML=`<div class="drawer-head"><span>TRACK DETAIL / ${live?'LIVE FEED':'DEMO'}</span><button data-close="detail" aria-label="Close track detail">✕</button></div><span class="artist">${esc(t.artistName)}</span><h2>${esc(t.title)}</h2><span class="track-meta">${esc([lanes[t.lane],Number.isFinite(t.bpm)?t.bpm+' BPM':null].filter(Boolean).join(' · '))}</span><h3>WHY IT’S HERE</h3><p>${esc(t.reason)}</p><h3>${live?'CURATION GRADING':'ILLUSTRATIVE GRADING'}</h3>${Object.entries(t.scores||{}).map(([k,v])=>`<div class="metric-row"><span>${esc(k[0].toUpperCase()+k.slice(1))}</span><b>${Number(v)} / 100</b></div>`).join('')}<div class="metric-row"><span>Overall / subgenre confidence</span><b>${t.score} / ${t.confidence}%</b></div><h3>RELEASE & DESTINATIONS</h3>${releaseInfo}<h3>YOUR CRATE</h3>${buttons(t)}<p><button data-action="hidden" data-id="${esc(t.id)}">Hide this track</button></p>`;if(show&&!$('#detail').open)$('#detail').showModal();updatePlayer()}
@@ -130,31 +130,61 @@ function openTuner(reset=true){
   $('#tuner-dialog').innerHTML=`<div class="drawer-head"><span>RECOMMENDATION TUNER</span><button data-close="tuner-dialog" aria-label="Close tuner">✕</button></div><h2>Tune your signal.</h2><p>Steer your next discovery session.</p><div class="tuner-tabs"><button data-scope="base" class="${tunerScope==='base'?'active':''}">Base</button><button data-scope="weekly" class="${tunerScope==='weekly'?'active':''}">This week</button></div><p class="notice">${feedState.source==='github'?'These settings steer future curation. The currently published drop remains immutable.':'Local preferences only. This fixed demo collection will not regenerate.'}</p>${[['future','Future / Experimental'],['deep','Deep / Minimal / Techy'],['jungle','Jungle / Breaks / Leftfield'],['depth','Discovery depth'],['experimental','Experimental bias'],['floor','Floor → Headphones'],['darkness','Darkness'],['breaks','Break density'],['count','Track count']].map(([k,label])=>`<label class="range-label" for="tune-${k}">${label}<output id="out-${k}">${p[k]}</output></label><input class="range-input" id="tune-${k}" data-pref="${k}" type="range" min="${k==='count'?10:0}" max="${k==='count'?15:100}" value="${p[k]}">`).join('')}<label class="check"><input type="checkbox" id="mixes-enabled" ${p.mixes?'checked':''}>Include DJ mixes</label><button class="primary tuner-save" id="save-tuner">Save ${tunerScope==='base'?'base profile':'this week’s override'}</button>${tunerScope==='weekly'?'<button class="tuner-save" id="clear-week">Use base profile this week</button>':''}${scheduleControlMarkup()}`;
   if(!$('#tuner-dialog').open)$('#tuner-dialog').showModal()
 }
+async function withAdminKey(operation){
+  let adminKey=sessionStorage.getItem('drop_portal_schedule_admin')||'';
+  try{return await operation(adminKey)}
+  catch(error){
+    if(error.status!==401)throw error;
+    adminKey=window.prompt('DROP:PORTAL admin access code')||'';
+    if(!adminKey)throw error;
+    sessionStorage.setItem('drop_portal_schedule_admin',adminKey);
+    try{return await operation(adminKey)}
+    catch(retryError){
+      if(retryError.status===401)sessionStorage.removeItem('drop_portal_schedule_admin');
+      throw retryError;
+    }
+  }
+}
 async function saveDropSchedule(){
   const date=$('#schedule-date')?.value,time=$('#schedule-time')?.value,mode=$('#schedule-mode')?.value;
   if(!date||!time||!mode){toast('Choose a valid drop date and time');return}
   scheduleSaving=true;openTuner(false);
-  let adminKey=sessionStorage.getItem('drop_portal_schedule_admin')||'';
-  const attempt=()=>saveSchedule({date,time,mode,adminKey});
   try{
-    let result;
-    try{result=await attempt()}
-    catch(error){
-      if(error.status!==401)throw error;
-      adminKey=window.prompt('DROP:PORTAL schedule admin access code')||'';
-      if(!adminKey)throw error;
-      sessionStorage.setItem('drop_portal_schedule_admin',adminKey);
-      result=await attempt();
-    }
-    scheduleSaving=false;
-    render();openTuner(false);
+    const result=await withAdminKey(adminKey=>saveSchedule({date,time,mode,adminKey}));
+    scheduleSaving=false;render();openTuner(false);
     toast('Drop schedule armed · inquiry date synchronized');
     return result;
   }catch(error){
-    scheduleSaving=false;
-    if(error.status===401)sessionStorage.removeItem('drop_portal_schedule_admin');
-    openTuner(false);
+    scheduleSaving=false;openTuner(false);
     toast(error.code==='schedule_write_not_configured'?'Schedule bridge needs server credentials':error.message||'Schedule update failed');
+  }
+}
+async function saveTunerProfile(){
+  captureDraft();
+  const profile={...draft[tunerScope]};
+  try{
+    if(feedState.source==='github'){
+      await withAdminKey(adminKey=>saveInquiry({scope:tunerScope,profile,adminKey}));
+    }
+    profiles[tunerScope]=profile;
+    if(tunerScope==='weekly')profiles.weekly.week=drops[0].id;
+    persist('profiles',profiles);
+    $('#tuner-dialog').close();render();
+    toast(feedState.source==='github'?'Tuner profile synced to publisher':'Profile saved locally');
+  }catch(error){
+    toast(error.code==='inquiry_write_not_configured'?'Tuner bridge needs server credentials':error.message||'Tuner save failed');
+  }
+}
+async function clearWeeklyProfile(){
+  try{
+    if(feedState.source==='github'){
+      await withAdminKey(adminKey=>saveInquiry({scope:'weekly',profile:null,clear:true,adminKey}));
+    }
+    profiles.weekly=null;persist('profiles',profiles);
+    $('#tuner-dialog').close();render();
+    toast(feedState.source==='github'?'Weekly override cleared from publisher':'This week now uses your base profile');
+  }catch(error){
+    toast(error.code==='inquiry_write_not_configured'?'Tuner bridge needs server credentials':error.message||'Could not clear weekly override');
   }
 }
 function captureDraft(){document.querySelectorAll('[data-pref]').forEach(x=>draft[tunerScope][x.dataset.pref]=Number(x.value));draft[tunerScope].mixes=$('#mixes-enabled').checked}document.addEventListener('input',e=>{if(e.target.dataset.pref)$('#out-'+e.target.dataset.pref).textContent=e.target.value;if(e.target.matches('[data-seek]'))player.seek(Number(e.target.value));if(e.target.id==='volume')player.audio.volume=Number(e.target.value)});
