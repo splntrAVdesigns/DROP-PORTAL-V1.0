@@ -25,15 +25,10 @@ function writeLocal(name,value){try{localStorage.setItem(name,value);return loca
 export function read(key,fallback){
   const primaryRaw=readLocal(PREFIX+key);
   const primary=safeParse(primaryRaw);
-  const primaryStamp=Number(readLocal(PREFIX+key+STAMP_SUFFIX)||0);
 
-  const backup=safeParse(readLocal(PREFIX+key+BACKUP_SUFFIX));
-  if(backup&&typeof backup==='object'&&Number(backup.writtenAt)>primaryStamp&&backup.value!=null){
-    const raw=JSON.stringify(backup.value);
-    writeLocal(PREFIX+key,raw);
-    writeLocal(PREFIX+key+STAMP_SUFFIX,String(backup.writtenAt));
-    return backup.value;
-  }
+  // Browser-local primary state is authoritative when it is valid. A stale
+  // mirrored backup must never replace newer user interaction state during
+  // a deployment reload.
   if(primary!=null)return primary;
 
   const cookieRaw=readCookie(key);
@@ -45,7 +40,15 @@ export function read(key,fallback){
     writeLocal(PREFIX+key+BACKUP_SUFFIX,JSON.stringify({writtenAt:now,value:cookie}));
     return cookie;
   }
-  if(backup&&typeof backup==='object'&&backup.value!=null)return backup.value;
+
+  const backup=safeParse(readLocal(PREFIX+key+BACKUP_SUFFIX));
+  if(backup&&typeof backup==='object'&&backup.value!=null){
+    const now=Number(backup.writtenAt)||Date.now();
+    const raw=JSON.stringify(backup.value);
+    writeLocal(PREFIX+key,raw);
+    writeLocal(PREFIX+key+STAMP_SUFFIX,String(now));
+    return backup.value;
+  }
   return fallback;
 }
 
