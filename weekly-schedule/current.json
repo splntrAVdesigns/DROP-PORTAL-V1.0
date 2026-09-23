@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "timezone": "America/Chicago",
+  "defaultSchedule": {
+    "weekday": "WEDNESDAY",
+    "time": "19:00"
+  },
+  "override": null,
+  "nextDropAt": "2026-09-23T19:00:00-05:00",
+  "status": "armed",
+  "updatedAt": "2026-09-23T07:53:00-05:00",
+  "lastPublishedAt": null
+}
