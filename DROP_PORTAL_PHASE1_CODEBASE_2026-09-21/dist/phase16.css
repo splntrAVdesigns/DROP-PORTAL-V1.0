@@ -34,42 +34,41 @@
 @media(max-width:700px){
   .mix-provider{margin:0 16px}
   .provider-edge-mask{width:46px}
-  .provider-signal{gap:2px}
 }
 
 
 /* Phase 2.1 — persistent board status flags */
-.track-status-flags{display:flex;flex-wrap:wrap;gap:8px;margin-top:7px}
-.track-status-flags span{display:inline-flex;align-items:center;min-height:24px;padding:3px 7px;border:1px solid rgba(4,217,255,.34);border-radius:3px;background:rgba(4,217,255,.055);color:#04d9ff;font:700 9px/1 monospace;letter-spacing:.65px}
-.priority-row>.track-status-flags{grid-column:2/4;margin-top:3px}
-@media(max-width:700px){.priority-row>.track-status-flags{grid-column:2/4}.track-status-flags span{font-size:10px}}
+.track-status-flags{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:6px 0 1px}
+.track-status-flags span{display:inline;color:#04d9ff;font:700 9px/1.2 monospace;letter-spacing:.7px}
+.priority-row>.track-status-flags{grid-column:2/4;margin:5px 0 0}
+@media(max-width:700px){.track-status-flags{gap:10px}.track-status-flags span{font-size:9px}.priority-row>.track-status-flags{grid-column:2/4}}
 
-
-/* Phase 2.3 — board crate controls + sticky provider dock */
-.board-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:7px}
-.board-actions .actions{display:flex;gap:6px}
-.board-actions .actions button{min-height:32px;padding:6px 9px;border:1px solid #2a3d45;color:#90a2a9;background:#0e171b}
-.board-actions .actions button.active{color:#04d9ff;border-color:rgba(4,217,255,.45);background:rgba(4,217,255,.07)}
-.board-actions .details-link{min-height:32px;margin-left:auto}
+/* Phase 2.4 — original-style provider dock + detail-only crate actions */
+.board-actions{display:flex;justify-content:flex-end;margin-top:7px}
+.board-actions .details-link{min-height:32px}
 .priority-row>.board-actions{grid-column:2/4}
 .priority-row>.track-preview{grid-column:2/4}
-.provider-dock-inner{min-height:58px}
-.provider-dock-status{flex:1;min-width:180px;padding-left:18px;border-left:1px solid #29414b}
-.provider-dock-status span{display:block;color:#04d9ff;font:700 10px/1.2 monospace;letter-spacing:.7px}
-.provider-dock-status small{display:block;margin-top:5px;color:#82969e;font:10px/1.25 monospace}
-.provider-dock-focus,.provider-dock-close{min-height:38px;border-color:#31505a}
-.provider-dock-focus{color:#b9dfe6;background:#102027;font:700 9px monospace;letter-spacing:.55px}
-.provider-dock-close{width:42px;padding:0;border-radius:50%;font-size:20px}
+
+.provider-native-dock{display:grid;grid-template-columns:220px 215px minmax(240px,1fr) auto;grid-template-rows:auto auto;align-items:center;column-gap:18px;row-gap:8px}
+.provider-native-dock .dock-title{grid-column:1/2;grid-row:1/2;width:auto}
+.provider-native-dock .dock-title button{width:100%}
+.provider-native-close{grid-column:4/5;grid-row:1/2;width:42px;height:42px;padding:0;border:1px solid #36505a;border-radius:50%;font-size:20px;color:#dce9ed;background:#0d171b}
+.provider-native-controls{grid-column:2/3;grid-row:1/2;display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid #2e4b55;border-radius:999px;overflow:hidden;min-height:42px;background:#0b1519}
+.provider-native-controls button{min-width:0;border:0;border-radius:0;background:transparent;color:#43545b;font-size:20px;padding:0}
+.provider-native-controls button+button{border-left:1px solid #21363e}
+.provider-native-controls .provider-native-focus{color:#04d9ff;background:radial-gradient(circle at center,rgba(4,217,255,.16),rgba(4,217,255,.04) 62%,transparent 64%);font-size:23px}
+.provider-native-controls button:disabled{opacity:.42}
+.provider-dock-wave{grid-column:3/4;grid-row:1/2;height:42px;display:flex;align-items:center;justify-content:center;gap:3px;padding:6px 14px;border:1px solid #31505a;border-radius:999px;background:#0b171b;overflow:hidden}
+.provider-dock-wave i{display:block;width:4px;max-height:30px;border-radius:999px;background:linear-gradient(180deg,#b066ff 0%,#04d9ff 55%,#8ff4ff 100%);box-shadow:0 0 7px rgba(4,217,255,.24)}
+.provider-control-note{grid-column:2/4;grid-row:2/3;color:#7e98a0;font:700 9px/1 monospace;letter-spacing:.8px}
 @media(max-width:700px){
   .provider-edge-mask{width:56px}
   .priority-row>.track-preview,.priority-row>.board-actions,.priority-row>.track-status-flags{grid-column:2/4}
-  .board-actions{display:grid;grid-template-columns:1fr auto;width:100%}
-  .board-actions .actions{grid-column:1/2}
-  .board-actions .actions button{min-height:38px}
-  .board-actions .details-link{grid-column:2/3;min-height:38px;margin-left:0}
-  .provider-dock-inner{display:grid;grid-template-columns:1fr auto;gap:8px 12px}
-  .provider-dock-inner .dock-title{width:auto}
-  .provider-dock-status{grid-column:1/-1;order:3;padding:8px 0 0;border-left:0;border-top:1px solid #29414b}
-  .provider-dock-focus{grid-column:1/2}
-  .provider-dock-close{grid-column:2/3;grid-row:1/3;align-self:center}
+  .board-actions{justify-content:flex-end;width:100%}
+  .provider-native-dock{display:grid;grid-template-columns:minmax(0,1fr) 44px;grid-template-rows:auto auto auto;gap:10px 12px}
+  .provider-native-dock .dock-title{grid-column:1/2;grid-row:1/2}
+  .provider-native-close{grid-column:2/3;grid-row:1/2}
+  .provider-native-controls{grid-column:1/2;grid-row:2/3;min-height:46px}
+  .provider-dock-wave{grid-column:1/3;grid-row:3/4;height:38px}
+  .provider-control-note{grid-column:1/3;grid-row:4/5;margin-top:0}
 }
