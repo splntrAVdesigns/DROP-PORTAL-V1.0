@@ -50,17 +50,28 @@ if (appSource.includes('class="provider-signal"')) {
   process.exit(1);
 }
 if (!appSource.includes('function boardActions(') ||
-    !appSource.includes('PROVIDER PLAYER LOADED') ||
+    !appSource.includes('providerDockSlot') ||
+    !appSource.includes('CONTROL IN EMBED') ||
+    !appSource.includes('providerDockWave()') ||
     !appSource.includes('data-provider-focus')) {
-  console.error('[shell] FAIL: provider dock or board crate controls are missing');
+  console.error('[shell] FAIL: original-style provider dock or compact board controls are missing');
+  process.exit(1);
+}
+const boardActionsStart = appSource.indexOf('function boardActions(');
+const boardActionsEnd = appSource.indexOf('function destinationActions(', boardActionsStart);
+const boardActionsSource = appSource.slice(boardActionsStart, boardActionsEnd);
+if (boardActionsSource.includes('buttons(t)')) {
+  console.error('[shell] FAIL: Save/Heard actions leaked back onto the main board');
   process.exit(1);
 }
 
 const storageSource = fs.readFileSync(path.join(dist, 'storage.js'), 'utf8');
 if (!storageSource.includes("COOKIE_PREFIX='drop_portal_'") ||
+    !storageSource.includes("BACKUP_SUFFIX=':backup'") ||
     !storageSource.includes('localStorage.setItem') ||
-    !storageSource.includes('writeCookie(key,raw)')) {
-  console.error('[shell] FAIL: durable interaction persistence fallback is missing');
+    !storageSource.includes('writeCookie(key,raw)') ||
+    !storageSource.includes('writtenAt')) {
+  console.error('[shell] FAIL: mirrored durable interaction persistence is missing');
   process.exit(1);
 }
 
