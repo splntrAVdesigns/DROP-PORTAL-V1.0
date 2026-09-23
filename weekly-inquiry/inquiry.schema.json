@@ -24,7 +24,7 @@
         "floor":{"type":"number","minimum":0,"maximum":100},
         "darkness":{"type":"number","minimum":0,"maximum":100},
         "breaks":{"type":"number","minimum":0,"maximum":100},
-        "count":{"type":"integer","minimum":10,"maximum":30},
+        "count":{"type":"integer","minimum":10,"maximum":15},
         "mixes":{"type":"boolean"}
       }
     }

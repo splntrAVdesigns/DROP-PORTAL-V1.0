@@ -65,3 +65,9 @@
     font-size: 9px;
   }
 }
+
+.hero-palettes{position:absolute;right:14px;top:12px;z-index:2;display:flex;gap:7px;padding:6px;background:#05090dcc;border:1px solid #25434c;border-radius:7px}
+.hero-palettes button{width:30px;height:20px;border:1px solid #ffffff33;border-radius:4px;background:var(--swatch);cursor:pointer;opacity:.65;padding:0}
+.hero-palettes button:hover,.hero-palettes button[aria-pressed=true]{opacity:1;outline:2px solid #dffbff;outline-offset:2px}
+.hero-palettes button:focus-visible{outline:3px solid white;outline-offset:3px}
+@media(max-width:700px){.hero-palettes{top:8px;right:8px;gap:8px}.hero-palettes button{width:25px;height:23px}}

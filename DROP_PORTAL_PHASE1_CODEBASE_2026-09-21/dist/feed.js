@@ -25,32 +25,46 @@ function validatePayload(p){
   if(!p.drop.ids.every(id=>ids.has(id)))throw Error('Drop references missing tracks');
   return{drop:p.drop,tracks,mixes:Array.isArray(p.mixes)?p.mixes.map(m=>({...m,links:m.links.map(link=>({...link}))})):[],profileSnapshot:validProfileSnapshot(p.profileSnapshot)?{...p.profileSnapshot}:null};
 }
-async function json(url){const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw Error('Feed request failed '+r.status);return r.json()}
+let appliedRevision=null,appliedAt=0;
+async function json(url){const r=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(10000)});if(!r.ok)throw Error('Feed request failed '+r.status);return r.json()}
 async function loadManifest(url){
   const manifest=await json(url);
   if(!manifest||manifest.schemaVersion!==1||!Array.isArray(manifest.drops)||!manifest.drops.length)throw Error('No published drops');
-  return{manifest,url};
+  return {manifest,url};
+}
+export async function fetchWeeklyFeed(){
+  const candidates=await Promise.allSettled([loadManifest(LIVE_MANIFEST+'?v='+Date.now()),loadManifest(DEPLOYED_MANIFEST+'?v='+Date.now())]);
+  const available=candidates.filter(x=>x.status==='fulfilled').map(x=>x.value).sort((a,b)=>Date.parse(b.manifest.updatedAt)-Date.parse(a.manifest.updatedAt));
+  for(const candidate of available){
+    const {manifest,url}=candidate;
+    const manifestAt=Date.parse(manifest.updatedAt);
+    if(!Number.isFinite(manifestAt)||manifestAt<appliedAt)continue;
+    const revision=JSON.stringify(manifest);
+    if(revision===appliedRevision)return null;
+    try{
+      const entries=manifest.drops.filter(x=>x?.status==='published'&&x.url).sort((a,b)=>Date.parse(b.publishedAt)-Date.parse(a.publishedAt));
+      if(!entries.length)throw Error('No published entries');
+      const base=new URL(url,globalThis.location?.origin||'http://localhost').href;
+      const payloads=await Promise.all(entries.map(async entry=>{
+        const target=new URL(entry.url,base);target.searchParams.set('v',manifest.updatedAt||entry.publishedAt);
+        const payload=validatePayload(await json(target.href));
+        if(payload.drop.id!==entry.id)throw Error('Manifest and payload IDs disagree');
+        return payload;
+      }));
+      return {payloads,revision,manifestAt,source:url.startsWith('http')?'Live weekly feed':'Deployed feed snapshot'};
+    }catch(error){console.warn('[DROP:PORTAL] feed candidate unavailable',error);}
+  }
+  throw Error('Latest feed could not be checked. Keeping the last loaded drop.');
+}
+export function commitWeeklyFeed(candidate){
+  if(!candidate)return false;
+  applyFeed(candidate.payloads);appliedRevision=candidate.revision;appliedAt=candidate.manifestAt;
+  const current=candidate.payloads[0];
+  Object.assign(feedState,{status:'ready',source:'github',message:candidate.source,loadedAt:new Date().toISOString(),quality:{tracks:current.tracks.length,withPreview:current.tracks.filter(t=>t.preview).length,withDestinations:current.tracks.filter(t=>t.links.length).length,mixes:current.mixes.length}});
+  return true;
 }
 export async function loadWeeklyFeed(){
   feedState.status='loading';
-  try{
-    let resolved;
-    try{resolved=await loadManifest(DEPLOYED_MANIFEST+'?v='+Date.now())}
-    catch(snapshotError){console.warn('[DROP:PORTAL] deployed snapshot unavailable; using live repository feed',snapshotError);resolved=await loadManifest(LIVE_MANIFEST+'?v='+Date.now())}
-    const{manifest,url:manifestUrl}=resolved;
-    const manifestBase=new URL(manifestUrl,globalThis.location?.origin||'http://localhost').href;
-    const entries=[...manifest.drops].filter(x=>x&&x.status==='published'&&x.url).sort((a,b)=>(b.publishedAt||'').localeCompare(a.publishedAt||''));
-    if(!entries.length)throw Error('No published drops');
-    const payloads=[];
-    for(const entry of entries){try{const dropUrl=new URL(entry.url,manifestBase);dropUrl.searchParams.set('v',manifest.updatedAt||entry.publishedAt||Date.now());payloads.push(validatePayload(await json(dropUrl.href)))}catch(e){console.warn('[DROP:PORTAL] skipped invalid drop',entry.id,e)}}
-    if(!payloads.length)throw Error('No valid published drops');
-    applyFeed(payloads);
-    const current=payloads[0],withPreview=current.tracks.filter(t=>t.preview).length,withDestinations=current.tracks.filter(t=>t.links.length).length;
-    feedState.status='ready';feedState.source='github';feedState.message=manifestUrl.startsWith('http')?'Live weekly feed':'Deployed feed snapshot';feedState.loadedAt=new Date().toISOString();feedState.quality={tracks:current.tracks.length,withPreview,withDestinations,mixes:current.mixes.length};
-    return true;
-  }catch(e){
-    console.warn('[DROP:PORTAL] weekly feed unavailable; using bundled seed data',e);
-    feedState.status='fallback';feedState.source='seed';feedState.message='Bundled demo fallback';feedState.loadedAt=new Date().toISOString();feedState.quality=null;
-    return false;
-  }
+  try{commitWeeklyFeed(await fetchWeeklyFeed());return true;}
+  catch(error){feedState.status=appliedRevision?'stale':'fallback';feedState.message=error.message;return false;}
 }

@@ -22,3 +22,5 @@ fs.cpSync(source, target, { recursive: true });
 fs.rmSync(scheduleTarget, { recursive: true, force: true });
 fs.cpSync(scheduleSource, scheduleTarget, { recursive: true });
 console.log('[build] PASS: canonical weekly-feed and weekly-schedule copied into deployed dist output');
+
+fs.copyFileSync(path.join(root,'lib','contracts.js'),path.join(dist,'contracts.js'));

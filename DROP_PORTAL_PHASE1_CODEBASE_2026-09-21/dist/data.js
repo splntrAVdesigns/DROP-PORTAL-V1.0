@@ -5,21 +5,22 @@ export const drops=[{id:'001',sequenceNumber:1,period:'21 — 27 SEP 2026',ids:t
 export const mixes=[{id:'m0',title:'The after-hours session',artistName:'PORTAL SELECTS',reason:'Deep textures → rolling breaks · illustrative mix entry',demo:true}];
 export const defaults={scope:'base',future:35,deep:40,jungle:25,depth:80,experimental:65,floor:60,darkness:75,breaks:70,count:12,mixes:true};
 export const feedProfiles=new Map();
+export const feedMixes=new Map();
+export function getDropMixes(dropId){return feedMixes.get(dropId)||[];}
 export function getFeedProfile(dropId){return feedProfiles.get(dropId)||null}
 
 export function applyFeed(payloads){
   if(!Array.isArray(payloads)||!payloads.length)return false;
-  const bundledDrops=drops.map(d=>({...d}));
-  const liveTracks=[],liveMixes=[],liveDrops=[];feedProfiles.clear();
+  const liveTracks=[],liveMixes=[],liveDrops=[];feedProfiles.clear();feedMixes.clear();
   for(const p of payloads){
     for(const t of p.tracks||[])if(!liveTracks.some(x=>x.id===t.id))liveTracks.push(t);
     for(const m of p.mixes||[])if(!liveMixes.some(x=>x.id===m.id))liveMixes.push(m);
     if(p.profileSnapshot)feedProfiles.set(p.drop.id,{...p.profileSnapshot});
+    feedMixes.set(p.drop.id,(p.mixes||[]).map(m=>({...m})));
     liveDrops.push(p.drop);
   }
   tracks.splice(0,tracks.length,...liveTracks);
   mixes.splice(0,mixes.length,...liveMixes);
-  const seen=new Set(liveDrops.map(d=>d.id));
-  drops.splice(0,drops.length,...liveDrops,...bundledDrops.filter(d=>!seen.has(d.id)));
+  drops.splice(0,drops.length,...liveDrops);
   return true;
 }

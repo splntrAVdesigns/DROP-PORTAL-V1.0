@@ -1,3 +1,4 @@
+import {validInquiry} from '../lib/contracts.js';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -53,3 +54,6 @@ if (inquiry.updatedAt != null && Number.isNaN(Date.parse(inquiry.updatedAt))) {
 
 if (process.exitCode) process.exit(process.exitCode);
 console.log(`[inquiry] PASS: ${inquiry.status} profile targeting ${inquiry.targetDropDate || 'base only'}`);
+
+const canonical=JSON.parse(fs.readFileSync('weekly-inquiry/current.json','utf8'));
+if(!validInquiry(canonical)){console.error('[inquiry] FAIL: shared profile contract');process.exit(1);}
