@@ -122,13 +122,30 @@ if (!scheduleApiSource.includes("process.env.GITHUB_TOKEN") ||
   process.exit(1);
 }
 
+if (!appSource.includes('scheduleSaving=false') ||
+    appSource.includes("window.addEventListener('pagehide',()=>write('interactions',interactions))")) {
+  console.error('[shell] FAIL: Tuner runtime state or interaction persistence regression detected');
+  process.exit(1);
+}
+
+if (!appSource.includes('provider-embed-shield')) {
+  console.error('[shell] FAIL: Bandcamp white-block shield is missing');
+  process.exit(1);
+}
+
+if (!phase16Source.includes('@keyframes provider-signal-sweep') ||
+    !phase16Source.includes('grid-template-columns:190px 180px minmax(420px,1fr) 46px')) {
+  console.error('[shell] FAIL: provider shield or desktop waveform sizing regression detected');
+  process.exit(1);
+}
+
 const storageSource = fs.readFileSync(path.join(dist, 'storage.js'), 'utf8');
 if (!storageSource.includes("COOKIE_PREFIX='drop_portal_'") ||
     !storageSource.includes("BACKUP_SUFFIX=':backup'") ||
     !storageSource.includes('localStorage.setItem') ||
     !storageSource.includes('writeCookie(key,raw)') ||
-    !storageSource.includes('writtenAt')) {
-  console.error('[shell] FAIL: mirrored durable interaction persistence is missing');
+    !storageSource.includes('Browser-local primary state is authoritative')) {
+  console.error('[shell] FAIL: durable interaction persistence closeout is missing');
   process.exit(1);
 }
 
