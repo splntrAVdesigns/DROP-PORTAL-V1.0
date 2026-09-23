@@ -49,6 +49,13 @@ if (appSource.includes('class="provider-signal"')) {
   console.error('[shell] FAIL: provider embed exposes a fake audio meter');
   process.exit(1);
 }
+if (appSource.includes('provider-edge-mask') ||
+    !appSource.includes('provider-load-progress') ||
+    !appSource.includes('provider-native-play') ||
+    !appSource.includes('is-provider-locked')) {
+  console.error('[shell] FAIL: Bandcamp loading mask or truthful native transport contract is missing');
+  process.exit(1);
+}
 if (!appSource.includes('function boardActions(') ||
     !appSource.includes('providerDockSlot') ||
     !appSource.includes('CONTROL IN EMBED') ||
@@ -62,6 +69,15 @@ const boardActionsEnd = appSource.indexOf('function destinationActions(', boardA
 const boardActionsSource = appSource.slice(boardActionsStart, boardActionsEnd);
 if (boardActionsSource.includes('buttons(t)')) {
   console.error('[shell] FAIL: Save/Heard actions leaked back onto the main board');
+  process.exit(1);
+}
+
+const phase16Source = fs.readFileSync(path.join(dist, 'phase16.css'), 'utf8');
+if (!phase16Source.includes('@keyframes provider-load-progress') ||
+    !phase16Source.includes('.provider-frame-wrap.is-provider-ready iframe{opacity:1}') ||
+    !phase16Source.includes('.provider-native-controls button+button{') ||
+    !phase16Source.includes('border:0!important')) {
+  console.error('[shell] FAIL: Bandcamp embed polish CSS is missing');
   process.exit(1);
 }
 
