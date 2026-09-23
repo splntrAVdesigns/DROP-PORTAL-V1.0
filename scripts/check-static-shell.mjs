@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process';
 
 const root = process.cwd();
 const dist = path.join(root, 'DROP_PORTAL_PHASE1_CODEBASE_2026-09-21', 'dist');
-const required = ['index.html', 'app.js', 'data.js', 'feed.js', 'player.js', 'storage.js', 'styles.css'];
+const required = ['index.html', 'app.js', 'data.js', 'feed.js', 'player.js', 'storage.js', 'schedule.js', 'styles.css'];
 const missing = required.filter((file) => !fs.existsSync(path.join(dist, file)));
 
 if (missing.length) {
@@ -23,6 +23,14 @@ for (const file of jsFiles) {
     process.stderr.write(result.stderr || '');
     process.exit(result.status ?? 1);
   }
+}
+
+const apiFile = path.join(root, 'api', 'schedule.js');
+const apiSyntax = spawnSync(process.execPath, ['--check', apiFile], { encoding: 'utf8' });
+if (apiSyntax.status !== 0) {
+  console.error('[shell] FAIL: syntax error in api/schedule.js');
+  process.stderr.write(apiSyntax.stderr || '');
+  process.exit(apiSyntax.status ?? 1);
 }
 
 const appSource = fs.readFileSync(path.join(dist, 'app.js'), 'utf8');
@@ -78,6 +86,25 @@ if (!phase16Source.includes('@keyframes provider-load-progress') ||
     !phase16Source.includes('.provider-native-controls button+button{') ||
     !phase16Source.includes('border:0!important')) {
   console.error('[shell] FAIL: Bandcamp embed polish CSS is missing');
+  process.exit(1);
+}
+
+const scheduleSource = fs.readFileSync(path.join(dist, 'schedule.js'), 'utf8');
+if (!appSource.includes("from'./schedule.js'") ||
+    !appSource.includes('NEXT DROP') ||
+    !appSource.includes('save-schedule') ||
+    !appSource.includes('This drop only') ||
+    !scheduleSource.includes("const API='/api/schedule'")) {
+  console.error('[shell] FAIL: Phase 2.7 dynamic scheduling UI or client contract is missing');
+  process.exit(1);
+}
+
+const scheduleApiSource = fs.readFileSync(apiFile, 'utf8');
+if (!scheduleApiSource.includes("process.env.GITHUB_TOKEN") ||
+    !scheduleApiSource.includes("process.env.DROP_PORTAL_ADMIN_KEY") ||
+    scheduleApiSource.includes('ghp_') ||
+    scheduleApiSource.includes('github_pat_')) {
+  console.error('[shell] FAIL: secure schedule API credential boundary is missing or unsafe');
   process.exit(1);
 }
 
