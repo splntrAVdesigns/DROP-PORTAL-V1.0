@@ -28,8 +28,13 @@ This keeps the weekly publisher armed for the next cycle while requiring any new
 
 ## Security boundary
 
-The Phase 1 dashboard is a static browser application. It must never contain a GitHub write token or other repository secret. Therefore browser-local Tuner changes cannot securely write this file directly yet.
+The browser must never contain a GitHub write token or repository secret.
 
-The contract and scheduler-read side are active in Phase 1.5.1. Automatic dashboard-to-repository publication requires an authenticated server write endpoint (planned production/API layer). Until that endpoint exists, local Tuner state remains local and `current.json` is the scheduler's durable profile.
+Phase 2.7 adds authenticated server-side publication-control endpoints for both Tuner inquiry writes and schedule writes. The browser sends only the user's requested settings plus a short-lived admin access key held in session storage; the GitHub credential remains server-side in Vercel environment variables.
 
-Do not weaken this boundary by embedding a GitHub token in client JavaScript.
+Required production environment variables:
+
+- `GITHUB_TOKEN` — fine-grained token restricted to this repository with Contents read/write permission.
+- `DROP_PORTAL_ADMIN_KEY` — admin access code used to authorize Tuner publication-control writes.
+
+The API fails closed when either credential is absent. Do not embed either value in client JavaScript or commit them to the repository.
