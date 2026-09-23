@@ -80,3 +80,109 @@
   .provider-control-note{grid-column:1/-1;grid-row:3/4;margin-top:0}
 }
 @media(prefers-reduced-motion:reduce){.provider-dock-wave i{animation:none}}
+
+
+/* Phase 2.6 — Bandcamp load masking + truthful native transport */
+.provider-frame-wrap{
+  position:relative;
+  overflow:hidden;
+  isolation:isolate;
+  border:1px solid #294a54;
+  border-radius:5px;
+  background:#091419;
+  box-shadow:inset 0 0 0 1px rgba(4,217,255,.025);
+}
+.provider-frame-wrap::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  z-index:2;
+  pointer-events:none;
+  background:linear-gradient(90deg,#091419 0%,#0b1c22 48%,#091419 100%);
+  opacity:0;
+  transition:opacity .18s ease;
+}
+.provider-frame-wrap.is-provider-loading::before{opacity:1}
+.provider-slot iframe{
+  position:relative;
+  z-index:1;
+  display:block;
+  width:100%;
+  height:42px;
+  border:0;
+  border-radius:4px;
+  background:#091419;
+  opacity:0;
+  transition:opacity .18s ease;
+}
+.provider-frame-wrap.is-provider-ready iframe{opacity:1}
+.provider-load-progress{
+  position:absolute;
+  left:8px;
+  right:8px;
+  bottom:5px;
+  z-index:3;
+  height:3px;
+  overflow:hidden;
+  border-radius:999px;
+  background:#17313a;
+  opacity:0;
+  transition:opacity .18s ease;
+  pointer-events:none;
+}
+.provider-frame-wrap.is-provider-loading .provider-load-progress{opacity:1}
+.provider-load-progress::after{
+  content:'';
+  display:block;
+  width:100%;
+  height:100%;
+  border-radius:inherit;
+  transform:scaleX(.05);
+  transform-origin:left center;
+  background:linear-gradient(90deg,#04d9ff 0%,#72efff 58%,#b066ff 100%);
+  box-shadow:0 0 9px rgba(4,217,255,.48);
+  animation:provider-load-progress 1.35s cubic-bezier(.2,.7,.25,1) forwards;
+}
+.provider-frame-wrap.is-provider-ready .provider-load-progress::after{
+  animation:none;
+  transform:scaleX(1);
+}
+.provider-frame-wrap.is-provider-ready .provider-load-progress{opacity:0}
+@keyframes provider-load-progress{
+  0%{transform:scaleX(.05)}
+  58%{transform:scaleX(.58)}
+  100%{transform:scaleX(.9)}
+}
+
+.provider-native-controls{
+  border:1px solid #2a4650;
+  box-shadow:none;
+}
+.provider-native-controls button,
+.provider-native-controls button+button{
+  border:0!important;
+  outline:0;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.provider-native-controls button:disabled{
+  opacity:1;
+  color:#42545b;
+  text-shadow:none;
+  cursor:default;
+}
+.provider-native-controls .provider-native-skip{
+  font:400 20px/1 system-ui,-apple-system,sans-serif;
+}
+.provider-native-controls .provider-native-play{
+  font:700 17px/1 system-ui,-apple-system,sans-serif;
+}
+@media(max-width:700px){
+  .provider-frame-wrap{border-color:#294a54}
+  .provider-load-progress{left:7px;right:7px;bottom:4px}
+  .provider-native-controls .provider-native-skip{font-size:19px}
+  .provider-native-controls .provider-native-play{font-size:16px}
+}
+@media(prefers-reduced-motion:reduce){
+  .provider-load-progress::after{animation:none;transform:scaleX(.72)}
+}
