@@ -17,6 +17,9 @@
   "functions": {
     "api/schedule.js": {
       "maxDuration": 10
+    },
+    "api/inquiry.js": {
+      "maxDuration": 10
     }
   }
 }
