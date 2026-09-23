@@ -5,7 +5,18 @@
   "outputDirectory": "DROP_PORTAL_PHASE1_CODEBASE_2026-09-21/dist",
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/archive", "destination": "/archive/index.html" },
-    { "source": "/saved", "destination": "/saved/index.html" }
-  ]
+    {
+      "source": "/archive",
+      "destination": "/archive/index.html"
+    },
+    {
+      "source": "/saved",
+      "destination": "/saved/index.html"
+    }
+  ],
+  "functions": {
+    "api/schedule.js": {
+      "maxDuration": 10
+    }
+  }
 }
