@@ -50,3 +50,9 @@ test('non-Bandcamp listening links resolve provider-owned players',()=>{
   assert.equal(mixcloud.provider,'MIXCLOUD');
   assert.equal(new URL(mixcloud.url).searchParams.get('feed'),'/artist/session/');
 });
+test('Bandcamp enrichment uses a compact player with visible transport',()=>{
+  const preview=embedPreview({preview:{provider:'BANDCAMP',kind:'provider-embed',embedUrl:'https://bandcamp.com/EmbeddedPlayer/track=1869038099/size=large/bgcol=333333/linkcol=04d9ff/transparent=false/'}});
+  assert.equal(preview.provider,'BANDCAMP');
+  assert.match(preview.url,/\/size=small\//);
+  assert.doesNotMatch(preview.url,/\/size=large\//);
+});

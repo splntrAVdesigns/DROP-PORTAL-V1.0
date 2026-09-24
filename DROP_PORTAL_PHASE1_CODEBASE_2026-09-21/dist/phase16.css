@@ -456,3 +456,32 @@
 }
 @media(max-width:360px){.panel.priority .panel-head small{font-size:8px}.panel.priority .panel-head{padding-inline:9px}}
 .mix-provider iframe{height:120px}
+
+/* Cohesive signal legend and player recovery. */
+.signal-panel .panel-head h2{display:flex;align-items:center;gap:9px;min-width:0;white-space:nowrap}
+.signal-icon{width:17px;height:17px;flex:none;display:grid;place-items:center;border:2px solid var(--cyan);border-radius:50%;box-shadow:0 0 8px #04d9ff35}
+.signal-icon i{width:5px;height:5px;background:var(--cyan);border-radius:50%}
+.lane-key{flex-wrap:wrap;gap:9px 15px}
+.lane-key>span{display:inline-flex;align-items:center;white-space:nowrap}
+.lane-key .marker{width:10px;height:10px;flex:none;margin-right:5px}
+#dock[hidden],#dock-restore[hidden]{display:none!important}
+#dock-restore{position:fixed;right:clamp(16px,3vw,40px);bottom:0;z-index:6;max-width:min(75vw,260px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:10px 18px;border:1px solid #358197;border-bottom:0;border-radius:8px 8px 0 0;background:#10272f;color:var(--cyan);font:700 12px/1.2 monospace;letter-spacing:1px;box-shadow:0 -4px 22px #0008}
+#dock-restore:hover{background:#16404c}
+.mobile-layout-editor{display:none}
+/* The official Bandcamp small skin keeps the actual play control in view. */
+.provider-slot.is-provider-live .provider-frame-wrap{min-height:42px}
+@media(max-width:700px){
+  .utilities #edit{display:inline-flex;align-items:center;justify-content:center;order:2;flex:none;white-space:nowrap}
+  .utilities #tuner{order:1}
+  #palette-controls{display:none!important}
+  .utilities{justify-content:flex-end;gap:8px}
+  .utilities button{font-size:10px;padding:9px 10px}
+  .mobile-layout-editor{display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:15px;margin:12px 0 25px;border:1px solid #245764;border-radius:8px;background:#0e1b20}
+  .mobile-layout-editor>span{font:700 11px/1.2 monospace;letter-spacing:1px;color:var(--cyan)}
+  .mobile-layout-editor .hero-palettes{gap:10px;padding:10px}
+  .mobile-layout-editor .hero-palettes button{width:36px;height:34px}
+  .signal-panel .panel-head h2{font-size:15px}
+  .signal-panel .panel-head small{font-size:9px;text-align:right}
+}
+@media(max-width:375px){.utilities button{font-size:9px;padding:8px 7px}.mobile-layout-editor .hero-palettes button{width:30px}}
+.utilities #edit[hidden]{display:none!important}

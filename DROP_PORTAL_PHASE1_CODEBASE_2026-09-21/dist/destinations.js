@@ -22,6 +22,8 @@ function normalizeEmbedUrl(value,provider){
   const url=externalUrl(value);if(!url)return null;
   if(provider==='BANDCAMP'&&url.hostname.toLowerCase().replace(/^www\./,'')==='bandcamp.com'&&url.pathname.startsWith('/EmbeddedPlayer/')){
     let href=url.href;
+    // The large skin places its playback control below the dashboard's compact frame.
+    href=href.replace(/\/size=large(?=\/|$)/,'/size=small');
     href=/\/bgcol=[^/]+/.test(href)?href.replace(/\/bgcol=[^/]+/,'/bgcol=333333'):href.replace(/\/$/,'/bgcol=333333/');
     href=/\/linkcol=[^/]+/.test(href)?href.replace(/\/linkcol=[^/]+/,'/linkcol=04d9ff'):href.replace(/\/$/,'/linkcol=04d9ff/');
     href=/\/transparent=[^/]+/.test(href)?href.replace(/\/transparent=[^/]+/,'/transparent=false'):href.replace(/\/$/,'/transparent=false/');
