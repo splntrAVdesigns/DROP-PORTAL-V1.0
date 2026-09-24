@@ -438,17 +438,21 @@
 .panel.priority .panel-head{display:flex;gap:8px;min-width:0}
 .panel.priority .panel-head h2{display:flex;align-items:center;gap:8px;font-size:clamp(14px,1.2vw,18px);font-weight:700;white-space:nowrap;flex-shrink:0}
 .panel.priority .panel-head small{text-align:right;font-size:clamp(9px,.8vw,12px);white-space:nowrap;min-width:0}
-.top3-arrow{display:inline-block;color:var(--cyan);font:700 19px/1 Arial,Helvetica,sans-serif;transform:translateY(-1px)}
-.apple-action{display:inline-flex;align-items:center;justify-content:center;margin-top:9px;padding:6px 8px;border:1px solid #37434b;border-radius:4px;font:700 9px/1.25 monospace;letter-spacing:.4px;color:#d6dde1;width:max-content;max-width:100%}
+.top3-arrow{display:block;width:19px;height:19px;flex:none;fill:none;stroke:var(--cyan);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.apple-action{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:7px 9px;border:1px solid #37434b;border-radius:4px;font:700 10px/1.25 monospace;letter-spacing:.4px;color:#d6dde1;width:max-content;max-width:100%}
 .apple-action:hover{border-color:#a7b1b8;color:#fff}
-.priority-row>.apple-action{grid-column:2/4;margin-top:0}
 @media(max-width:700px){
-  .utilities{flex-wrap:wrap;justify-content:flex-end;align-items:center}
-  #palette-controls{order:3;flex-basis:100%;display:flex;justify-content:flex-end}
+  .utilities{width:100%;min-width:0;flex-wrap:nowrap;justify-content:flex-end;align-items:center;gap:8px}
+  #palette-controls{order:0;flex:0 1 auto;min-width:0;display:flex;justify-content:flex-end}
+  .utilities #tuner{order:1;flex:none;white-space:nowrap}
+  .utilities #edit{order:2}
+  .utilities .hero-palettes{gap:clamp(2px,1vw,6px);padding:5px}
+  .utilities .hero-palettes button{width:clamp(17px,5.2vw,24px);height:23px}
+  .destination-actions .apple-action{min-height:42px}
   .panel.priority .panel-head{padding:14px 12px;gap:6px}
   .panel.priority .panel-head h2{font-size:14px;gap:5px}
   .panel.priority .panel-head small{font-size:9px;letter-spacing:-.35px}
-  .top3-arrow{font-size:16px}
+  .top3-arrow{width:16px;height:16px}
 }
 @media(max-width:360px){.panel.priority .panel-head small{font-size:8px}.panel.priority .panel-head{padding-inline:9px}}
 .mix-provider iframe{height:120px}
