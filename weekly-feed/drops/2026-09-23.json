@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "drop": {
+    "id": "004",
+    "sequenceNumber": 4,
+    "period": "23 — 29 SEP 2026",
+    "ids": [
+      "fx909-retrograde",
+      "generic-meds-chugging",
+      "moma-ready-selectors-delight",
+      "fx909-s00998",
+      "generic-meds-royal-tree",
+      "moma-ready-so-you-understand",
+      "moon-rhythms-appreciate",
+      "fx909-x00001",
+      "generic-meds-puro",
+      "moma-ready-fantastic-control",
+      "moon-rhythms-zonein",
+      "mage-hundred-times"
+    ],
+    "publishedAt": "2026-09-23T19:17:46-05:00"
+  },
+  "profileSnapshot": {
+    "source": "weeklyOverride",
+    "targetDropDate": "2026-09-23",
+    "future": 35,
+    "deep": 70,
+    "jungle": 70,
+    "depth": 65,
+    "experimental": 60,
+    "floor": 45,
+    "darkness": 70,
+    "breaks": 70,
+    "count": 12,
+    "mixes": true
+  },
+  "scheduleSnapshot": {
+    "nextDropAt": "2026-09-23T19:00:00-05:00",
+    "timezone": "America/Chicago",
+    "defaultSchedule": {"weekday":"WEDNESDAY","time":"19:00"},
+    "override": null
+  },
+  "tracks": [
+    {"id":"fx909-retrograde","artistName":"FX909","title":"Retrograde","reason":"Retro synths, rolling bass and infectious beats make this a strong deep-but-mobile opener for the week's techy weighting.","subgenre":"Atmospheric / Deep Drum & Bass","release":"Retrograde EP","label":"Omni Music","releaseDate":"2026-09-20","lane":1,"score":93,"confidence":96,"preview":null,"links":[{"kind":"store-listening","url":"https://omnimusic.bandcamp.com/album/retrograde-ep"}],"startHere":true,"priority":1,"scores":{"production":94,"originality":91,"dancefloor":91,"headphones":95,"overall":93}},
+    {"id":"generic-meds-chugging","artistName":"Generic Meds","title":"Chugging","reason":"Serene atmospherics and delicate harmonies push the deep lane toward detailed headphone listening without losing rhythmic momentum.","subgenre":"Atmospheric Drum & Bass","release":"Lemon Triangle","label":"Omni Music","releaseDate":"2026-09-20","lane":1,"score":92,"confidence":97,"preview":null,"links":[{"kind":"store-listening","url":"https://omnimusic.bandcamp.com/album/lemon-triangle"}],"startHere":false,"priority":6,"scores":{"production":93,"originality":90,"dancefloor":86,"headphones":96,"overall":92}},
+    {"id":"moma-ready-selectors-delight","artistName":"MoMA Ready","title":"SELECTORS DELIGHT","reason":"A fresh, genre-fluid drum-work cut that connects contemporary Black electronic music, jungle energy and selector-minded movement.","subgenre":"Drum & Bass / Jungle / Club","release":"Infinite Drum Works","label":"Self-released","releaseDate":"2026-09-22","lane":2,"score":95,"confidence":91,"preview":null,"links":[{"kind":"store-listening","url":"https://momaready.bandcamp.com/album/infinite-drum-works"}],"startHere":true,"priority":2,"scores":{"production":95,"originality":96,"dancefloor":95,"headphones":92,"overall":95}},
+    {"id":"fx909-s00998","artistName":"FX909","title":"S00998","reason":"Old-school chords, precision-chopped breaks and hypnotic low-end make this one of the clearest break-density matches in the new release pool.","subgenre":"Jungle / Atmospheric Drum & Bass","release":"Retrograde EP","label":"Omni Music","releaseDate":"2026-09-20","lane":2,"score":94,"confidence":97,"preview":null,"links":[{"kind":"store-listening","url":"https://omnimusic.bandcamp.com/album/retrograde-ep"}],"startHere":true,"priority":3,"scores":{"production":94,"originality":92,"dancefloor":93,"headphones":94,"overall":94}},
+    {"id":"generic-meds-royal-tree","artistName":"Generic Meds","title":"Royal Tree","reason":"Hypnotic bass hooks inside a deep atmospheric framework suit the week's equal deep/jungle emphasis and lower floor bias.","subgenre":"Deep / Atmospheric Drum & Bass","release":"Lemon Triangle","label":"Omni Music","releaseDate":"2026-09-20","lane":1,"score":91,"confidence":95,"preview":null,"links":[{"kind":"store-listening","url":"https://omnimusic.bandcamp.com/album/lemon-triangle"}],"startHere":false,"priority":8,"scores":{"production":92,"originality":89,"dancefloor":88,"headphones":94,"overall":91}},
+    {"id":"moma-ready-so-you-understand","artistName":"MoMA Ready","title":"SO YOU UNDERSTAND","reason":"A concise new drum-work piece with cross-genre club DNA that gives the future-facing lane some edge without drifting into obvious chart territory.","subgenre":"Experimental Drum & Bass / Club","release":"Infinite Drum Works","label":"Self-released","releaseDate":"2026-09-22","lane":0,"score":93,"confidence":89,"preview":null,"links":[{"kind":"store-listening","url":"https://momaready.bandcamp.com/album/infinite-drum-works"}],"startHere":false,"priority":5,"scores":{"production":93,"originality":95,"dancefloor":91,"headphones":93,"overall":93}},
+    {"id":"moon-rhythms-appreciate","artistName":"Moon Rhythms","title":"appreciate","reason":"Leftfield jungle/DnB framing and experimental electronic context make this a useful detour for the week's discovery depth and break focus.","subgenre":"Leftfield Jungle / DnB","release":"Transient","label":"Self-released","releaseDate":"2026-09-01","lane":2,"score":90,"confidence":90,"preview":null,"links":[{"kind":"store-listening","url":"https://moonrhythms.bandcamp.com/album/transient"}],"startHere":false,"priority":10,"scores":{"production":90,"originality":94,"dancefloor":84,"headphones":93,"overall":90}},
+    {"id":"fx909-x00001","artistName":"FX909","title":"X00001","reason":"Energetically chopped rhythms, a strong bass hook and progressive keys give the jungle/break lane a melodic but still propulsive selection.","subgenre":"Jungle / Drum & Bass","release":"Retrograde EP","label":"Omni Music","releaseDate":"2026-09-20","lane":2,"score":92,"confidence":96,"preview":null,"links":[{"kind":"store-listening","url":"https://omnimusic.bandcamp.com/album/retrograde-ep"}],"startHere":false,"priority":7,"scores":{"production":93,"originality":91,"dancefloor":93,"headphones":91,"overall":92}},
+    {"id":"generic-meds-puro","artistName":"Generic Meds","title":"Puro","reason":"Majestic strings and keys inside Omni's deep-atmospheric palette make this a detail-rich counterweight to the harder break selections.","subgenre":"Atmospheric / Deep Drum & Bass","release":"Lemon Triangle","label":"Omni Music","releaseDate":"2026-09-20","lane":1,"score":91,"confidence":95,"preview":null,"links":[{"kind":"store-listening","url":"https://omnimusic.bandcamp.com/album/lemon-triangle"}],"startHere":false,"priority":9,"scores":{"production":92,"originality":90,"dancefloor":85,"headphones":95,"overall":91}},
+    {"id":"moma-ready-fantastic-control","artistName":"MoMA Ready","title":"FANTASTIC CONTROL","reason":"The project's bass-cab mission and genre-agnostic club language make this a punchier experimental bridge between future DnB and jungle-minded movement.","subgenre":"Experimental Drum & Bass / Club","release":"Infinite Drum Works","label":"Self-released","releaseDate":"2026-09-22","lane":0,"score":92,"confidence":88,"preview":null,"links":[{"kind":"store-listening","url":"https://momaready.bandcamp.com/album/infinite-drum-works"}],"startHere":false,"priority":4,"scores":{"production":93,"originality":94,"dancefloor":92,"headphones":89,"overall":92}},
+    {"id":"moon-rhythms-zonein","artistName":"Moon Rhythms","title":"zonein","reason":"A second leftfield selection from Transient keeps the crate exploratory and breaks-oriented rather than overfilling it with conventional rollers.","subgenre":"Leftfield Jungle / DnB","release":"Transient","label":"Self-released","releaseDate":"2026-09-01","lane":2,"score":89,"confidence":89,"preview":null,"links":[{"kind":"store-listening","url":"https://moonrhythms.bandcamp.com/album/transient"}],"startHere":false,"priority":12,"scores":{"production":89,"originality":93,"dancefloor":84,"headphones":92,"overall":89}},
+    {"id":"mage-hundred-times","artistName":"Mage","title":"Hundred Times","reason":"A current liquid DnB release adds a smoother deep-lane reset while preserving underground sourcing and a headphone-friendly profile.","subgenre":"Liquid Drum & Bass","release":"Hundred Times","label":"Liquid Brilliants","releaseDate":"2026-09-13","lane":1,"score":90,"confidence":97,"preview":null,"links":[{"kind":"store-listening","url":"https://liquidbrilliants.bandcamp.com/album/hundred-times"}],"startHere":false,"priority":11,"scores":{"production":91,"originality":87,"dancefloor":88,"headphones":93,"overall":90}}
+  ],
+  "mixes": [
+    {"id":"platform-project-108-home-turf-2026-09","artistName":"The Platform Project / Home Turf","title":"Platform Project #108 — Home Turf guestmix","reason":"A fresh September show spanning liquid, jungle, footwork and deeper DnB, with an upfront/unreleased focus that fits this week's broad deep-and-break profile.","preview":null,"links":[{"kind":"listening","url":"https://www.mixcloud.com/ThePlatform/2hrs-of-drum-and-bass-platform-project-108-september-2026-home-turf-guestmix/"}]},
+    {"id":"djseriousd-underground-dnb-2026-09","artistName":"DJSeriousD","title":"DRUM AND BASS UNDERGROUND — 09/2026","reason":"A current deep, dark and liquid underground session that directly matches the week's Deep 70 and Darkness 70 settings.","preview":null,"links":[{"kind":"listening","url":"https://www.mixcloud.com/davidlyddon/drum-and-bass-underground-a-dj-serious-dunderground-dnb-mix-092026/"}]}
+  ],
+  "sources": [
+    "https://omnimusic.bandcamp.com/album/retrograde-ep",
+    "https://omnimusic.bandcamp.com/album/lemon-triangle",
+    "https://momaready.bandcamp.com/album/infinite-drum-works",
+    "https://moonrhythms.bandcamp.com/album/transient",
+    "https://liquidbrilliants.bandcamp.com/album/hundred-times",
+    "https://www.mixcloud.com/ThePlatform/2hrs-of-drum-and-bass-platform-project-108-september-2026-home-turf-guestmix/",
+    "https://www.mixcloud.com/davidlyddon/drum-and-bass-underground-a-dj-serious-dunderground-dnb-mix-092026/"
+  ]
+}
