@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import {applyFeed,drops,mixes,getDropMixes,getFeedProfile} from '../DROP_PORTAL_PHASE1_CODEBASE_2026-09-21/dist/data.js';
 import {createFeedRefresh} from '../DROP_PORTAL_PHASE1_CODEBASE_2026-09-21/dist/feed-refresh.js';
 import {mergeInteractions,updateInteraction} from '../DROP_PORTAL_PHASE1_CODEBASE_2026-09-21/dist/interactions.js';
+import {embedPreview} from '../DROP_PORTAL_PHASE1_CODEBASE_2026-09-21/dist/destinations.js';
 const current=JSON.parse(fs.readFileSync('weekly-feed/drops/2026-09-23-test.json'));
 const previous=JSON.parse(fs.readFileSync('weekly-feed/drops/2026-09-21-test.json'));
 test('published data replaces seed archive; mixes and profiles stay scoped',()=>{
@@ -40,4 +41,12 @@ test('a verified enrichment adds a preview without rewriting the published paylo
   assert.equal(candidate.payloads[0].tracks.filter(t=>t.preview).length,12);
   assert.equal(live.tracks.filter(t=>t.preview).length,0);
   assert.equal(candidate.payloads[0].tracks[0].preview.provider,'BANDCAMP');
+});
+test('non-Bandcamp listening links resolve provider-owned players',()=>{
+  const soundcloud=embedPreview({links:[{kind:'listening',url:'https://soundcloud.com/artist/verified-track'}]});
+  assert.equal(soundcloud.provider,'SOUNDCLOUD');
+  assert.equal(new URL(soundcloud.url).hostname,'w.soundcloud.com');
+  const mixcloud=embedPreview({links:[{kind:'listening',url:'https://www.mixcloud.com/artist/session/'}]});
+  assert.equal(mixcloud.provider,'MIXCLOUD');
+  assert.equal(new URL(mixcloud.url).searchParams.get('feed'),'/artist/session/');
 });
