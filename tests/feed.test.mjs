@@ -30,3 +30,14 @@ test('Saved/Heard merge across tabs preserves explicit false values',()=>{
   const merged=mergeInteractions(b,c);assert.equal(merged.track.saved,false);assert.equal(merged.track.heard,true);
   assert.deepEqual(mergeInteractions(merged,JSON.parse(JSON.stringify(merged))),merged);
 });
+test('a verified enrichment adds a preview without rewriting the published payload',async()=>{
+  const {fetchWeeklyFeed}=await import('../DROP_PORTAL_PHASE1_CODEBASE_2026-09-21/dist/feed.js');
+  const live=JSON.parse(fs.readFileSync('weekly-feed/drops/2026-09-23.json'));
+  const amendment=JSON.parse(fs.readFileSync('weekly-feed/drops/2026-09-23.enrichment.json'));
+  const manifest={schemaVersion:1,updatedAt:'2026-09-25T00:00:00Z',drops:[{id:'004',status:'published',publishedAt:live.drop.publishedAt,url:'./2026-09-23.json',enrichmentUrl:'./2026-09-23.enrichment.json'}]};
+  globalThis.fetch=async url=>({ok:true,json:async()=>String(url).includes('index.json')?manifest:String(url).includes('.enrichment.json')?amendment:live});
+  const candidate=await fetchWeeklyFeed();
+  assert.equal(candidate.payloads[0].tracks.filter(t=>t.preview).length,12);
+  assert.equal(live.tracks.filter(t=>t.preview).length,0);
+  assert.equal(candidate.payloads[0].tracks[0].preview.provider,'BANDCAMP');
+});

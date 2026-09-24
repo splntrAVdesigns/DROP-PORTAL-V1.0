@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "dropId": "004",
+  "sourcePayload": "./2026-09-23.json",
+  "verifiedAt": "2026-09-24",
+  "tracks": [
+    {
+      "id": "fx909-retrograde",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=1869038099/size=large/bgcol=333333/linkcol=04d9ff/tracklist=false/transparent=false/"
+      }
+    },
+    {
+      "id": "generic-meds-chugging",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=618784181/size=large/bgcol=333333/linkcol=04d9ff/tracklist=false/transparent=false/"
+      }
+    },
+    {
+      "id": "moma-ready-selectors-delight",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=1695005244/size=large/bgcol=333333/linkcol=04d9ff/tracklist=false/transparent=false/"
+      }
+    },
+    {
+      "id": "fx909-s00998",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=517667030/size=large/bgcol=333333/linkcol=04d9ff/tracklist=false/transparent=false/"
+      }
+    },
+    {
+      "id": "generic-meds-royal-tree",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=876520676/size=large/bgcol=333333/linkcol=04d9ff/tracklist=false/transparent=false/"
+      }
+    },
+    {
+      "id": "moma-ready-so-you-understand",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=4256837171/size=large/bgcol=333333/linkcol=04d9ff/tracklist=false/transparent=false/"
+      }
+    },
+    {
+      "id": "moon-rhythms-appreciate",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=3615783288/size=large/bgcol=333333/linkcol=04d9ff/tracklist=false/transparent=false/"
+      }
+    },
+    {
+      "id": "fx909-x00001",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=3639486620/size=large/bgcol=333333/linkcol=04d9ff/tracklist=false/transparent=false/"
+      }
+    },
+    {
+      "id": "generic-meds-puro",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=383202135/size=large/bgcol=333333/linkcol=04d9ff/tracklist=false/transparent=false/"
+      }
+    },
+    {
+      "id": "moma-ready-fantastic-control",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=1564607038/size=large/bgcol=333333/linkcol=04d9ff/tracklist=false/transparent=false/"
+      }
+    },
+    {
+      "id": "moon-rhythms-zonein",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=3299335765/size=large/bgcol=333333/linkcol=04d9ff/tracklist=false/transparent=false/"
+      }
+    },
+    {
+      "id": "mage-hundred-times",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=890926403/size=large/bgcol=333333/linkcol=04d9ff/tracklist=false/transparent=false/"
+      }
+    }
+  ]
+}

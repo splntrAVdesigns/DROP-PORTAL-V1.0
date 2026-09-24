@@ -49,6 +49,25 @@ export async function fetchWeeklyFeed(){
         const target=new URL(entry.url,base);target.searchParams.set('v',manifest.updatedAt||entry.publishedAt);
         const payload=validatePayload(await json(target.href));
         if(payload.drop.id!==entry.id)throw Error('Manifest and payload IDs disagree');
+        if(entry.enrichmentUrl){
+          const amendmentUrl=new URL(entry.enrichmentUrl,base);
+          amendmentUrl.searchParams.set('v',manifest.updatedAt);
+          const amendment=await json(amendmentUrl.href);
+          if(amendment.schemaVersion!==1||amendment.dropId!==entry.id||!Array.isArray(amendment.tracks))throw Error('Invalid enrichment identity');
+          const byId=new Map(payload.tracks.map(track=>[track.id,track]));
+          const seen=new Set();
+          for(const change of amendment.tracks){
+            if(!change||!byId.has(change.id)||seen.has(change.id)||!validPreview(change.preview)||!change.preview)throw Error('Invalid track enrichment');
+            seen.add(change.id);
+            const track=byId.get(change.id);
+            if(track.preview)throw Error('Enrichment cannot replace a published preview');
+            track.preview=change.preview;
+            if(change.links){
+              if(!Array.isArray(change.links)||!change.links.every(validLink))throw Error('Invalid enrichment destinations');
+              track.links.push(...change.links);
+            }
+          }
+        }
         return payload;
       }));
       return {payloads,revision,manifestAt,source:url.startsWith('http')?'Live weekly feed':'Deployed feed snapshot'};

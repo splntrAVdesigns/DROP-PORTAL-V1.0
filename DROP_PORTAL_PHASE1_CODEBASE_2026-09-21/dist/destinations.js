@@ -1,6 +1,7 @@
 const PROVIDERS={
   'bandcamp.com':'BANDCAMP',
   'soundcloud.com':'SOUNDCLOUD',
+  'mixcloud.com':'MIXCLOUD',
   'music.apple.com':'APPLE MUSIC',
   'open.spotify.com':'SPOTIFY',
   'beatport.com':'BEATPORT',
@@ -36,7 +37,7 @@ function inferredRoles(kind,provider){
   if(value.includes('store')||value.includes('buy')||value.includes('purchase'))roles.add('buy');
   if(value.includes('evidence')||value.includes('source'))roles.add('evidence');
   if(provider==='BANDCAMP'){roles.add('listen');roles.add('buy')}
-  if(provider==='SOUNDCLOUD'||provider==='SPOTIFY'||provider==='APPLE MUSIC')roles.add('listen');
+  if(provider==='SOUNDCLOUD'||provider==='MIXCLOUD'||provider==='SPOTIFY'||provider==='APPLE MUSIC')roles.add('listen');
   if(!roles.size)roles.add('evidence');
   return roles;
 }
@@ -74,6 +75,12 @@ export function embedPreview(item){
   if(soundcloud){
     const params=new URLSearchParams({url:soundcloud.url,color:'#04d9ff',auto_play:'false',hide_related:'true',show_comments:'false',show_user:'true',show_reposts:'false',visual:'false'});
     return{url:'https://w.soundcloud.com/player/?'+params.toString(),provider:'SOUNDCLOUD'};
+  }
+  const mixcloud=destinations(item).find(d=>d.provider==='MIXCLOUD'&&d.roles.has('listen'));
+  if(mixcloud){
+    const source=new URL(mixcloud.url);
+    const params=new URLSearchParams({hide_cover:'1',light:'0',feed:source.pathname});
+    return{url:'https://www.mixcloud.com/widget/iframe/?'+params.toString(),provider:'MIXCLOUD'};
   }
   return null;
 }

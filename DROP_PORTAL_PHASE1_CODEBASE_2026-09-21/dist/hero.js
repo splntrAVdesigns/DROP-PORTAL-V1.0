@@ -16,7 +16,8 @@ document.addEventListener('click',event=>{
   document.dispatchEvent(new Event('hero-palette-change'));
 });
 let heroFrame=null,heroObserver=null,heroCleanup=null;
-export function heroMarkup(){return `<section class="ascii-hero" aria-label="DROP:PORTAL signal visual"><canvas id="ascii-hero-canvas" role="img" aria-label="ASCII texture with evolving rotational flow"></canvas><div class="hero-palettes" role="group" aria-label="Hero color gradient">${PALETTES.map(p=>`<button data-hero-palette="${p.id}" title="${p.name}" aria-label="${p.name}" aria-pressed="${palette.id===p.id}" style="--swatch:linear-gradient(100deg,${p.colors[0]},${p.colors[1]})"></button>`).join('')}</div><div class="ascii-hero-chrome" aria-hidden="true"><span>LIVE SIGNAL / 001</span><i></i><span>DROP:PORTAL</span></div><noscript><img src="/ascii-portal.png" alt="Cyan ASCII portal graphic"></noscript></section>`}
+export function paletteMarkup(){return `<div class="hero-palettes" role="group" aria-label="Hero color gradient">${PALETTES.map(p=>`<button data-hero-palette="${p.id}" title="${p.name}" aria-label="${p.name}" aria-pressed="${palette.id===p.id}" style="--swatch:linear-gradient(100deg,${p.colors[0]},${p.colors[1]})"></button>`).join('')}</div>`}
+export function heroMarkup(){return `<section class="ascii-hero" aria-label="DROP:PORTAL signal visual"><canvas id="ascii-hero-canvas" role="img" aria-label="ASCII texture with evolving rotational flow"></canvas><div class="ascii-hero-chrome" aria-hidden="true"><span>LIVE SIGNAL / 001</span><i></i><span>DROP:PORTAL</span></div><noscript><img src="/ascii-portal.png" alt="Cyan ASCII portal graphic"></noscript></section>`}
 export function stopHero(){if(heroFrame!==null)cancelAnimationFrame(heroFrame);heroFrame=null;heroObserver?.disconnect();heroObserver=null;heroCleanup?.();heroCleanup=null}
 export function initHero(){
   stopHero();const canvas=$('#ascii-hero-canvas');if(!canvas)return;

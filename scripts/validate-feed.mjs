@@ -75,6 +75,22 @@ for (const entry of manifest.drops ?? []) {
   if (payloadIds.has(payload.drop.id)) fail(`duplicate payload drop id: ${payload.drop.id}`);
   payloadIds.add(payload.drop.id);
 
+  if (entry.enrichmentUrl) {
+    const enrichmentPath = path.resolve(feedRoot, 'drops', entry.enrichmentUrl.replace(/^\.\//, ''));
+    if (!enrichmentPath.startsWith(path.join(feedRoot, 'drops') + path.sep) || !fs.existsSync(enrichmentPath)) {
+      fail(`${entry.url}: missing or unsafe enrichment path`);
+    } else {
+      const enrichment = readJson(enrichmentPath);
+      const ids = new Set(payload.tracks.map(track => track.id));
+      const seen = new Set();
+      if (enrichment?.schemaVersion !== 1 || enrichment.dropId !== entry.id || !Array.isArray(enrichment.tracks)) fail(`${entry.url}: enrichment identity mismatch`);
+      for (const track of enrichment?.tracks ?? []) {
+        if (!ids.has(track.id) || seen.has(track.id) || !validPreview(track.preview) || !track.preview || (track.links && (!Array.isArray(track.links) || !track.links.every(validLink)))) fail(`${entry.url}: invalid enrichment ${track.id}`);
+        seen.add(track.id);
+      }
+    }
+  }
+
   const trackIds = new Set();
   for (const track of payload.tracks) {
     if (!track || typeof track.id !== 'string') fail(`${entry.url}: track is missing id`);
