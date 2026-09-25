@@ -24,6 +24,9 @@
     },
     "api/inquiry.js": {
       "maxDuration": 30
+    },
+    "api/drop-settings.js": {
+      "maxDuration": 30
     }
   },
   "headers": [
