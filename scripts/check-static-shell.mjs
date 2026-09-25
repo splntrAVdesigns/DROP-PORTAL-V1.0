@@ -10,4 +10,12 @@ for(const dir of [dist,'api','lib'])for(const file of fs.readdirSync(dir).filter
   for(const [,specifier] of fs.readFileSync(target,'utf8').matchAll(/from\s*['"](\.[^'"]+)['"]/g))if(!fs.existsSync(path.resolve(dir,specifier)))throw Error(`Missing import in ${target}: ${specifier}`);
 }
 if(fs.readFileSync('lib/contracts.js','utf8')!==fs.readFileSync(path.join(dist,'contracts.js'),'utf8'))throw Error('Browser/server contracts differ');
-console.log('[shell] PASS: assets, syntax, imports, shared contracts');
+for(const [file,needle] of [
+  ['api/drop-settings.js','writeState(state,{schedule,inquiry}'],
+  [path.join(dist,'tuner.js'),'data-tuner-combined'],
+  [path.join(dist,'inquiry.js'),"'/api/drop-settings'"],
+  ['lib/repository.js','publisherConfigured']
+]){
+  if(!fs.readFileSync(file,'utf8').includes(needle))throw Error('Missing combined publisher save contract: '+file);
+}
+console.log('[shell] PASS: assets, syntax, imports, shared contracts, combined save');
