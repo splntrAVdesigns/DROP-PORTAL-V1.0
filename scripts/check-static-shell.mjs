@@ -11,7 +11,7 @@ for(const dir of [dist,'api','lib'])for(const file of fs.readdirSync(dir).filter
 }
 if(fs.readFileSync('lib/contracts.js','utf8')!==fs.readFileSync(path.join(dist,'contracts.js'),'utf8'))throw Error('Browser/server contracts differ');
 for(const [file,needle] of [
-  ['api/drop-settings.js','writeState(state,{schedule,inquiry}'],
+  ['api/drop-settings.js','writeState('],
   [path.join(dist,'tuner.js'),'data-tuner-combined'],
   [path.join(dist,'inquiry.js'),"'/api/drop-settings'"],
   ['lib/repository.js','publisherConfigured']
