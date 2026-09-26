@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "drop": {
-    "id": "005",
+    "id": "FAILED-2026-09-25",
     "sequenceNumber": 5,
     "period": "25 SEP 2026",
     "ids": [],
-    "publishedAt": "2026-09-25T21:00:00-05:00"
+    "publishedAt": ""
   },
   "profileSnapshot": {
     "source": "weeklyOverride",
