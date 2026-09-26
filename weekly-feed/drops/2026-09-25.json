@@ -47,7 +47,11 @@
       "time": "21:00"
     }
   },
-  "tracks": [],
+  "tracks": [
+    {
+      "id": "section-existence"
+    }
+  ],
   "mixes": [],
   "sources": []
 }
