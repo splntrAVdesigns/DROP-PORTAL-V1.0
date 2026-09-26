@@ -570,3 +570,11 @@
 .provider-slot[data-provider="SOUNDCLOUD"] iframe{height:166px}
 .provider-slot[data-provider="MIXCLOUD"] iframe{height:120px}
 .provider-slot[data-provider="BANDCAMP"] iframe{height:42px}
+
+/* Phase 3C: compact private taste controls. */
+.personal-taste{padding:8px 0 20px}.personal-taste h3{margin:22px 0 12px;font:700 12px monospace;letter-spacing:1px;color:#bcebf5}
+.personal-taste input:not([type=range]):not([type=checkbox]),.personal-taste select{display:block;width:100%;box-sizing:border-box;border:1px solid #34454d;border-radius:5px;background:#0c171c;color:#ddf5fa;padding:11px;margin:8px 0}
+.personal-taste label{font-size:13px}.personal-taste fieldset{min-width:0}.taste-add{display:flex;align-items:center;gap:8px}.taste-add input{min-width:0}.taste-add button{flex:none}
+.taste-chips,.focus-chips{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}.taste-chips button,.focus-chips button{padding:9px 11px;border:1px solid #34454d;border-radius:999px;background:#101b20;color:#a6bdc5;font-size:11px}
+.focus-chips button[aria-pressed=true],.personal-taste .tuner-tabs button[aria-pressed=true]{border-color:#04d9ff;color:#04d9ff;background:#0d2931}.focus-chips button:disabled{opacity:.45;cursor:not-allowed}.taste-chips>span{font-size:12px;color:#789099}
+.personal-fine,.personal-data,.publisher-tools{border-top:1px solid #2b3c43;padding-top:15px;margin-top:20px}.personal-data p{font-size:12px;line-height:1.6}.personal-data button{margin:8px 8px 8px 0}.personal-account{overflow-wrap:anywhere;font-size:12px}.personal-account button{margin-left:8px}.personal-taste [role=status]{color:#8cdce9;font-size:12px;line-height:1.5}

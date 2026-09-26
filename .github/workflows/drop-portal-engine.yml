@@ -30,6 +30,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - run: npm ci
       - name: Validate local contracts
         run: npm run check
       - name: Scheduled discovery, staging, and due publication

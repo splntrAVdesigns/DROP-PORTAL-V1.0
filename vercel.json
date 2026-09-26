@@ -42,6 +42,12 @@
     },
     "api/research-queue.js": {
       "maxDuration": 30
+    },
+    "api/personal-session.js": {
+      "maxDuration": 30
+    },
+    "api/personal-data.js": {
+      "maxDuration": 30
     }
   },
   "headers": [
