@@ -1,0 +1,44 @@
+# Phase 2.9 is opt-in. Never compete with an existing ChatGPT publisher
+# until the stage->publish path is verified and the owner enables this engine.
+name: DROP PORTAL Autonomous Publication
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Validate only. Never write staged or published files.'
+        required: true
+        default: true
+        type: boolean
+permissions:
+  contents: write
+concurrency:
+  group: drop-portal-production-publisher
+  cancel-in-progress: false
+jobs:
+  pipeline:
+    # Enable repository variable DROP_PORTAL_ENGINE_AUTO_ENABLED=true only
+    # after a dry-run and an independently verified discovery source.
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.DROP_PORTAL_ENGINE_AUTO_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Set up repository snapshot
+        uses: actions/checkout@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate local contracts
+        run: npm run check
+      - name: Scheduled discovery, staging, and due publication
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DROP_PORTAL_SOURCE_FEED_URL: ${{ vars.DROP_PORTAL_SOURCE_FEED_URL }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.dry_run }}" = "true" ]; then
+            node scripts/phase29-runner.mjs --mode=cycle --dry-run
+          else
+            node scripts/phase29-runner.mjs --mode=cycle
+          fi
