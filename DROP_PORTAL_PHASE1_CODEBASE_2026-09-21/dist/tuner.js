@@ -105,14 +105,20 @@ async function refreshPublisherSession(){
   if(dialog().open&&!busy)render();
 }
 async function lockPublisher(){
-  try{await fetch('/api/admin-session',{method:'DELETE',credentials:'same-origin'});}
-  catch{/* lock local UI on network failure; backend signed cookie still expires */}
-  authUnlocked=false;render();
+  try{
+    const response=await fetch('/api/admin-session',{method:'DELETE',credentials:'same-origin'});
+    if(!response.ok)throw Error('Publisher lock could not be confirmed.');
+    authUnlocked=false;render();notify('Publisher locked on this browser');
+  }catch{
+    error='Unable to confirm publisher lock. Please retry or close this browser.';
+    render();
+  }
 }
 async function withAdmin(operation){
   try{return await operation('');}
   catch(error){
     if(error.status!==401)throw error;
+    authUnlocked=false;
     await promptPublisherUnlock();
     // Subsequent saves use only the HttpOnly cookie. Never put the secret in
     // localStorage, sessionStorage, URL, or a JavaScript-readable cookie.
