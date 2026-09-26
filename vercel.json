@@ -30,6 +30,15 @@
     },
     "api/admin-session.js": {
       "maxDuration": 10
+    },
+    "api/engine-stage.js": {
+      "maxDuration": 30
+    },
+    "api/engine-publish.js": {
+      "maxDuration": 30
+    },
+    "api/pipeline-status.js": {
+      "maxDuration": 30
     }
   },
   "headers": [
