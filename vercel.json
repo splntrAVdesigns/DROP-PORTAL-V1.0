@@ -39,6 +39,9 @@
     },
     "api/pipeline-status.js": {
       "maxDuration": 30
+    },
+    "api/research-queue.js": {
+      "maxDuration": 30
     }
   },
   "headers": [

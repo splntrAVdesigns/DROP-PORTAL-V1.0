@@ -1,0 +1,38 @@
+name: DROP PORTAL Research Intake
+on:
+  schedule:
+    - cron: '20 11 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Fetch and validate only; do not save candidates'
+        type: boolean
+        default: true
+permissions:
+  contents: write
+concurrency:
+  group: drop-portal-research-intake
+  cancel-in-progress: false
+jobs:
+  intake:
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.DROP_PORTAL_RESEARCH_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm run check
+      - name: Discover research candidates
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SOUNDCLOUD_ACCESS_TOKEN: ${{ secrets.SOUNDCLOUD_ACCESS_TOKEN }}
+          SOUNDCLOUD_CLIENT_ID: ${{ secrets.SOUNDCLOUD_CLIENT_ID }}
+          SOUNDCLOUD_CLIENT_SECRET: ${{ secrets.SOUNDCLOUD_CLIENT_SECRET }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.dry_run }}" = "true" ]; then
+            node scripts/research-intake.mjs --dry-run
+          else
+            node scripts/research-intake.mjs
+          fi

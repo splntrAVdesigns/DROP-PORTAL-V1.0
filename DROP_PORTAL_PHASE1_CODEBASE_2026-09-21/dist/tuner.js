@@ -3,7 +3,7 @@ import {scheduleState,saveSchedule,formatNextDrop,nextDropFields,scheduleMode,sc
 import {localDate} from './contracts.js';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const labels=[['future','Future / Experimental'],['deep','Deep / Minimal / Techy'],['jungle','Jungle / Breaks / Leftfield'],['depth','Discovery depth'],['experimental','Experimental bias'],['floor','Floor → Headphones'],['darkness','Darkness'],['breaks','Break density'],['count','Track count']];
-let scope='base',snapshot=null,drafts=null,scheduleDraft=null,busy=false,error='',conflict=false,dirty=false,epoch=0,authUnlocked=false;
+let scope='base',snapshot=null,drafts=null,scheduleDraft=null,busy=false,error='',conflict=false,dirty=false,epoch=0,authUnlocked=false,researchResult=null,researchBusy=false,researchError='';
 let onSaved=()=>{},notify=()=>{};
 const dialog=()=>document.querySelector('#tuner-dialog');
 const hourLabel=value=>{const h=Number(value.slice(0,2));return `${h%12||12}:00 ${h<12?'AM':'PM'}`;};
@@ -25,7 +25,8 @@ function render(){
   <p class="tuner-sync" role="status">${dirty?'UNSAVED EDITS':'SYNCED WITH PUBLISHER'} · TARGET ${esc(i.targetDropDate)}<br>${i.status==='queued'?'This week’s override is queued.':'Base profile will be used.'}</p>
   <p class="notice">These settings steer the next drop. Published drops keep their original profile. Lane values are relative priorities, not percentages.</p>
   <fieldset ${busy?'disabled':''} class="tuner-fields">${labels.map(([k,label])=>`<label class="range-label" for="tune-${k}">${label}<output id="out-${k}">${p[k]}</output></label><input class="range-input" id="tune-${k}" data-pref="${k}" type="range" min="${k==='count'?10:0}" max="${k==='count'?15:100}" value="${p[k]}">`).join('')}<label class="check"><input type="checkbox" id="mixes-enabled" ${p.mixes?'checked':''}>Include DJ mixes</label><button class="primary tuner-save" data-tuner-save ${unconfigured?'disabled title="Publisher credentials required"':''}>${busy?'SAVING…':'Save '+(scope==='base'?'base profile':'this week’s override')}</button>${scope==='weekly'?`<button class="tuner-save" data-tuner-clear ${unconfigured?'disabled title="Publisher credentials required"':''}>Use base profile this week</button>`:''}
-  <section class="schedule-editor" aria-label="Drop schedule control"><div class="schedule-editor-head"><div><span>DROP SCHEDULE</span><small>Production publication control</small></div><em>WEEKLY · ${esc(s.defaultSchedule.weekday.slice(0,3))} ${hourLabel(s.defaultSchedule.time)} CT</em></div><div class="schedule-row"><label><span>DAY</span><input id="schedule-date" type="date" min="${localDate(new Date())}" value="${esc(scheduleDraft.date)}"></label><label><span>TIME</span><select id="schedule-time">${Array.from({length:24},(_,h)=>String(h).padStart(2,'0')+':00').map(v=>`<option value="${v}" ${v===scheduleDraft.time?'selected':''}>${hourLabel(v)}</option>`).join('')}</select></label><label><span>MODE</span><select id="schedule-mode"><option value="one-off" ${scheduleDraft.mode==='one-off'?'selected':''}>This drop only</option><option value="weekly-default" ${scheduleDraft.mode==='weekly-default'?'selected':''}>Make weekly default</option></select></label><button class="primary schedule-save" data-tuner-combined ${unconfigured?'disabled title="Publisher credentials required"':''}>SAVE DROP SETTINGS</button></div><p class="schedule-armed">${esc(scheduleLabel())} · ${esc(formatNextDrop(s))}</p><p class="schedule-help">One save QUEUES this tab\'s preferences and selected schedule; research staging is verified separately. America/Chicago.</p></section></fieldset>`}`;
+  <section class="schedule-editor" aria-label="Drop schedule control"><div class="schedule-editor-head"><div><span>DROP SCHEDULE</span><small>Production publication control</small></div><em>WEEKLY · ${esc(s.defaultSchedule.weekday.slice(0,3))} ${hourLabel(s.defaultSchedule.time)} CT</em></div><div class="schedule-row"><label><span>DAY</span><input id="schedule-date" type="date" min="${localDate(new Date())}" value="${esc(scheduleDraft.date)}"></label><label><span>TIME</span><select id="schedule-time">${Array.from({length:24},(_,h)=>String(h).padStart(2,'0')+':00').map(v=>`<option value="${v}" ${v===scheduleDraft.time?'selected':''}>${hourLabel(v)}</option>`).join('')}</select></label><label><span>MODE</span><select id="schedule-mode"><option value="one-off" ${scheduleDraft.mode==='one-off'?'selected':''}>This drop only</option><option value="weekly-default" ${scheduleDraft.mode==='weekly-default'?'selected':''}>Make weekly default</option></select></label><button class="primary schedule-save" data-tuner-combined ${unconfigured?'disabled title="Publisher credentials required"':''}>SAVE DROP SETTINGS</button></div><p class="schedule-armed">${esc(scheduleLabel())} · ${esc(formatNextDrop(s))}</p><p class="schedule-help">One save QUEUES this tab\'s preferences and selected schedule; research staging is verified separately. America/Chicago.</p></section></fieldset>
+  <section class="research-review" aria-label="Research intake"><h3>RESEARCH INTAKE</h3><p>Source discoveries awaiting metadata, store, and audio review. Shortlisting does not certify a track or stage a drop.</p><button data-research-refresh ${researchBusy?'disabled':''}>${researchBusy?'LOADING…':'VIEW CANDIDATES'}</button>${researchError?`<p role="alert">${esc(researchError)}</p>`:''}${researchResult?`<p role="status">${researchResult.candidates.length} candidates · ${researchResult.sources.length} registered sources · last run ${esc(researchResult.runs[0]?.at||'none')}</p><ul>${researchResult.candidates.slice(0,30).map(c=>`<li><strong>${esc(c.artistName)} — ${esc(c.title)}</strong><br>${esc(c.releaseDate||'release date needed')} · ${esc(c.sourceIds.join(', '))} · ${esc(c.flags.join(', '))} · ${esc(c.reviewStatus)}<br>${c.evidence.map(e=>`<a href="${esc(e.url)}" target="_blank" rel="noopener noreferrer">SOURCE ↗</a>`).join(' · ')}<br><button type="button" data-research-id="${esc(c.id)}" data-research-decision="shortlisted" ${researchBusy?'disabled':''}>SHORTLIST</button><button type="button" data-research-id="${esc(c.id)}" data-research-decision="rejected" ${researchBusy?'disabled':''}>REJECT</button></li>`).join('')}</ul>`:''}</section>`}`;
   d.querySelectorAll('[data-tuner-scope],[data-tuner-reload],[data-tuner-rebase]').forEach(b=>b.disabled=busy);
 }
 async function reload(keep=false){
@@ -37,7 +38,7 @@ async function reload(keep=false){
 }
 export async function openTuner(){
   if(busy){dialog().showModal();return;}
-  scope='base';snapshot=null;drafts=null;scheduleDraft=null;dirty=false;error='';conflict=false;
+  scope='base';snapshot=null;drafts=null;scheduleDraft=null;dirty=false;error='';conflict=false;researchResult=null;researchError='';
   if(!dialog().open)dialog().showModal();await reload();await refreshPublisherSession();
 }
 
@@ -125,6 +126,34 @@ async function withAdmin(operation){
     return await operation('');
   }
 }
+async function loadResearch(){
+  if(researchBusy)return;
+  capture();researchBusy=true;researchError='';render();
+  try{
+    const result=await withAdmin(async()=>{
+      const response=await fetch('/api/research-queue',{credentials:'same-origin',cache:'no-store'});
+      const body=await response.json();
+      if(!response.ok)throw Object.assign(new Error(body.message||'Research queue unavailable.'),{status:response.status});
+      return body;
+    });
+    researchResult=result;
+  }catch(e){researchError=e.message;}
+  finally{researchBusy=false;render();}
+}
+async function decideResearch(id,decision){
+  if(researchBusy)return;
+  capture();researchBusy=true;researchError='';render();
+  try{
+    await withAdmin(async()=>{
+      const response=await fetch('/api/research-queue',{method:'POST',credentials:'same-origin',cache:'no-store',
+        headers:{'Content-Type':'application/json'},body:JSON.stringify({id,decision})});
+      const body=await response.json();
+      if(!response.ok)throw Object.assign(new Error(body.message||'Research review could not be saved.'),{status:response.status});
+    });
+    const c=researchResult?.candidates.find(item=>item.id===id);if(c)c.reviewStatus=decision;
+  }catch(e){researchError=e.message;}
+  finally{researchBusy=false;render();}
+}
 
 async function save(kind){
   if(busy||!snapshot)return;capture();if(snapshot.publisherConfigured===false){error='Production publisher credentials must be configured and redeployed before saving.';render();return;}const expectedRevision=snapshot.revision;
@@ -154,5 +183,7 @@ export function setupTuner(options){
     if(b.hasAttribute('data-tuner-clear'))save('clear');
     if(b.hasAttribute('data-tuner-combined'))save('combined');
     if(b.hasAttribute('data-tuner-lock'))lockPublisher();
+    if(b.hasAttribute('data-research-refresh'))loadResearch();
+    if(b.dataset.researchId)decideResearch(b.dataset.researchId,b.dataset.researchDecision);
   });
 }

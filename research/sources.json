@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "sources": [
+    {
+      "id": "musicbrainz-dnb",
+      "kind": "musicbrainz-recordings",
+      "name": "MusicBrainz · Drum & Bass recordings",
+      "enabled": true,
+      "queries": ["drum and bass", "jungle", "deep drum and bass"],
+      "limitPerQuery": 25
+    },
+    {
+      "id": "soundcloud-dnb",
+      "kind": "soundcloud-tracks",
+      "name": "SoundCloud · Drum & Bass search",
+      "enabled": true,
+      "queries": ["drum and bass", "jungle", "deep dnb"],
+      "limitPerQuery": 25
+    }
+  ]
+}
