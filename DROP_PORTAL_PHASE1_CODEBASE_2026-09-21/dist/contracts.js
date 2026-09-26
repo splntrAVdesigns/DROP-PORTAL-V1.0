@@ -1,14 +1,16 @@
 export const TIMEZONE = 'America/Chicago';
 export const WEEKDAYS = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
 export const PROFILE_KEYS = ['future','deep','jungle','depth','experimental','floor','darkness','breaks'];
+export const SEARCH_PAST = ['1mo','3mo','6mo','1yr'];
 export const validHour = value => typeof value === 'string' && /^(?:[01]\d|2[0-3]):00$/.test(value);
 export function validDate(value) {
   if(typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const instant = new Date(value+'T12:00:00Z');
   return !Number.isNaN(+instant) && instant.toISOString().slice(0,10) === value;
 }
-export const validProfile = p => !!p && PROFILE_KEYS.every(k=>Number.isFinite(p[k]) && p[k]>=0 && p[k]<=100) && Number.isInteger(p.count) && p.count>=10 && p.count<=15 && typeof p.mixes==='boolean';
-export const cleanProfile = p => Object.fromEntries([...PROFILE_KEYS,'count','mixes'].map(k=>[k,p[k]]));
+export const validProfile = p => !!p && PROFILE_KEYS.every(k=>Number.isFinite(p[k]) && p[k]>=0 && p[k]<=100) && Number.isInteger(p.count) && p.count>=10 && p.count<=15 && typeof p.mixes==='boolean' && (p.searchPast===undefined||SEARCH_PAST.includes(p.searchPast));
+// Older saved profiles and published snapshots default to one month until edited.
+export const cleanProfile = p => ({...Object.fromEntries([...PROFILE_KEYS,'count','mixes'].map(k=>[k,p[k]])),searchPast:p.searchPast??'1mo'});
 export function validSchedule(s) {
   return !!s && s.schemaVersion===1 && s.timezone===TIMEZONE && WEEKDAYS.includes(s.defaultSchedule?.weekday) && validHour(s.defaultSchedule.time) && Number.isFinite(Date.parse(s.nextDropAt)) && ['armed','publishing','paused'].includes(s.status) && (s.override===null || (s.override?.mode==='one-off' && validDate(s.override.date) && validHour(s.override.time)));
 }

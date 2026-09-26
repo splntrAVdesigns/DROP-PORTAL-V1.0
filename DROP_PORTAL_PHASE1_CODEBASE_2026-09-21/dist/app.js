@@ -4,7 +4,7 @@ import{openTuner,setupTuner}from'./tuner.js';
 import{pipelineState,loadPipelineStatus,preflightLabel}from'./pipeline-client.js';
 import{heroMarkup,initHero,paletteMarkup}from'./hero.js';
 import{createFeedRefresh}from'./feed-refresh.js';
-const BUILD_ID='P3A-research-intake-2026-09-25';window.__DROP_PORTAL_BUILD__=BUILD_ID;
+const BUILD_ID='P3B-historical-discovery-2026-09-25';window.__DROP_PORTAL_BUILD__=BUILD_ID;
 const heroStyles=document.createElement('link');heroStyles.rel='stylesheet';heroStyles.href='/hero.css';document.head.append(heroStyles);
 document.addEventListener('click',event=>{const link=event.target.closest?.('a[data-external]');if(!link)return;event.preventDefault();event.stopImmediatePropagation();const popup=window.open('','_blank');if(popup){popup.opener=null;popup.location.replace(link.href)}else window.location.assign(link.href)},true);
 const $=s=>document.querySelector(s);let interactions=read('interactions',{}),profiles=read('profiles',{base:{...defaults},weekly:null}),layout=read('layout',[{id:'start',size:'standard'},{id:'signal',size:'compact'},{id:'lane0',size:'wide'},{id:'lane1',size:'wide'},{id:'lane2',size:'wide'},{id:'lane3',size:'standard'},{id:'mix',size:'standard'}]);let editing=false,mobileEditing=false,filter='all',detailId=null,dragged=null;const defaultLayout=JSON.parse(JSON.stringify([{id:'start',size:'standard'},{id:'signal',size:'compact'},{id:'lane0',size:'wide'},{id:'lane1',size:'wide'},{id:'lane2',size:'wide'},{id:'lane3',size:'standard'},{id:'mix',size:'standard'}]));

@@ -25,7 +25,8 @@
         "darkness":{"type":"number","minimum":0,"maximum":100},
         "breaks":{"type":"number","minimum":0,"maximum":100},
         "count":{"type":"integer","minimum":10,"maximum":15},
-        "mixes":{"type":"boolean"}
+        "mixes":{"type":"boolean"},
+        "searchPast":{"enum":["1mo","3mo","6mo","1yr"],"description":"Optional for legacy profiles; defaults to 1mo when saved or researched."}
       }
     }
   }

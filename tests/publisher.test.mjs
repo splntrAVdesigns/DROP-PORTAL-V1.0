@@ -59,7 +59,7 @@ test('one-click save atomically records This Week tuning and next-drop schedule'
   assert.equal(r.code,200);
   assert.equal(repo.mutations,1,'one atomic commit, not two independent saves');
   assert.equal(repo.state.inquiry.status,'queued');
-  assert.deepEqual(repo.state.inquiry.weeklyOverride,profile);
+  assert.deepEqual(repo.state.inquiry.weeklyOverride,{...profile,searchPast:'1mo'});
   assert.equal(repo.state.inquiry.targetDropDate,'2030-09-25');
   assert.equal(repo.state.schedule.override.mode,'one-off');
   assert.equal(repo.state.schedule.nextDropAt,'2030-09-26T00:00:00.000Z');

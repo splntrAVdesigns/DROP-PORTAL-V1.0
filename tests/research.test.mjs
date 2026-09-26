@@ -36,16 +36,16 @@ test('adapters use official endpoints, never manufacture missing credentials',as
     visited.push([url.toString(),options.headers]);
     return {ok:true,text:async()=>JSON.stringify(url.hostname==='musicbrainz.org'?{recordings:[mb]}:[sc])};
   };
-  const mbResult=await discoverSource(mbSource,{fetcher,now});
+  const mbResult=await discoverSource(mbSource,{fetcher,now,throttleMs:0});
   const scMissing=await discoverSource(scSource,{fetcher,now,soundcloudToken:''});
   const scResult=await discoverSource(scSource,{fetcher,now,soundcloudToken:'test-token'});
   assert.equal(mbResult.candidates.length,1);
   assert.equal(scMissing.state,'needs_credentials');
   assert.equal(scResult.candidates.length,1);
-  assert.equal(visited.length,2);
+  assert.equal(visited.length,4);
   assert.match(visited[0][0],/^https:\/\/musicbrainz\.org\/ws\/2\/recording\//);
-  assert.match(visited[1][0],/^https:\/\/api\.soundcloud\.com\/tracks\?/);
-  assert.equal(visited[1][1].Authorization,'OAuth test-token');
+  assert.match(visited[2][0],/^https:\/\/api\.soundcloud\.com\/tracks\?/);
+  assert.equal(visited[3][1].Authorization,'OAuth test-token');
 });
 test('queue merges cross-source evidence and preserves reviewer decisions on rerun',()=>{
   const a=normalizeMusicBrainz(mb,mbSource,now),b=normalizeSoundCloud(sc,scSource,now);
