@@ -61,7 +61,9 @@
       "score": 97,
       "confidence": 99,
       "preview": null,
-      "links": []
+      "links": [
+        {}
+      ]
     }
   ],
   "mixes": [],
