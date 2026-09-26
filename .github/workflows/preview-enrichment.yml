@@ -1,0 +1,35 @@
+name: DROP PORTAL Preview Enrichment
+on:
+  push:
+    branches: [main]
+    paths: ['weekly-feed/drops/**']
+  schedule:
+    - cron: '37 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: drop-portal-preview-enrichment
+  cancel-in-progress: false
+jobs:
+  enrich:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Resolve official track embeds
+        run: node scripts/enrich-previews.mjs --write
+      - run: npm run check
+      - name: Save verified preview amendments
+        run: |
+          git add weekly-feed/drops/
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'DROP PORTAL Preview Worker'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Enrich latest drop with verified official track previews'
+          git push origin HEAD:main

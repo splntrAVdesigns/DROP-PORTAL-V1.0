@@ -1,0 +1,188 @@
+{
+  "schemaVersion": 1,
+  "dropId": "005",
+  "sourcePayload": "./2026-09-25.json",
+  "verifiedAt": "2026-09-26",
+  "tracks": [
+    {
+      "id": "eckom-mindstate",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=2292450874/size=small/bgcol=333333/linkcol=04d9ff/transparent=false/"
+      },
+      "evidence": {
+        "sourceUrl": "https://omnimusic.bandcamp.com/album/mindstate-ep",
+        "artist": "Eckom",
+        "title": "Mindstate",
+        "providerTrackId": "2292450874",
+        "checkedAt": "2026-09-26T03:22:05.490Z"
+      }
+    },
+    {
+      "id": "eckom-black-bridge-remix",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=697941044/size=small/bgcol=333333/linkcol=04d9ff/transparent=false/"
+      },
+      "evidence": {
+        "sourceUrl": "https://omnimusic.bandcamp.com/album/mindstate-ep",
+        "artist": "Eckom",
+        "title": "Black Bridge (Remix)",
+        "providerTrackId": "697941044",
+        "checkedAt": "2026-09-26T03:22:05.498Z"
+      }
+    },
+    {
+      "id": "eckom-cognitive-dissonance",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=3377870944/size=small/bgcol=333333/linkcol=04d9ff/transparent=false/"
+      },
+      "evidence": {
+        "sourceUrl": "https://omnimusic.bandcamp.com/album/mindstate-ep",
+        "artist": "Eckom",
+        "title": "Cognitive Dissonance",
+        "providerTrackId": "3377870944",
+        "checkedAt": "2026-09-26T03:22:05.503Z"
+      }
+    },
+    {
+      "id": "eckom-premonition",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=4112709136/size=small/bgcol=333333/linkcol=04d9ff/transparent=false/"
+      },
+      "evidence": {
+        "sourceUrl": "https://omnimusic.bandcamp.com/album/mindstate-ep",
+        "artist": "Eckom",
+        "title": "Premonition",
+        "providerTrackId": "4112709136",
+        "checkedAt": "2026-09-26T03:22:05.504Z"
+      }
+    },
+    {
+      "id": "freebird-arpeggiate-remix",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=1923699884/size=small/bgcol=333333/linkcol=04d9ff/transparent=false/"
+      },
+      "evidence": {
+        "sourceUrl": "https://omnimusic.bandcamp.com/album/olo-the-freebird-remixes",
+        "artist": "Freebird",
+        "title": "Arpeggiate (Freebird Remix)",
+        "providerTrackId": "1923699884",
+        "checkedAt": "2026-09-26T03:22:05.920Z"
+      }
+    },
+    {
+      "id": "freebird-danach-remix",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=1220755191/size=small/bgcol=333333/linkcol=04d9ff/transparent=false/"
+      },
+      "evidence": {
+        "sourceUrl": "https://omnimusic.bandcamp.com/album/olo-the-freebird-remixes",
+        "artist": "Freebird",
+        "title": "Danach (Freebird Remix)",
+        "providerTrackId": "1220755191",
+        "checkedAt": "2026-09-26T03:22:05.920Z"
+      }
+    },
+    {
+      "id": "freebird-drifter-remix",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=2060101959/size=small/bgcol=333333/linkcol=04d9ff/transparent=false/"
+      },
+      "evidence": {
+        "sourceUrl": "https://omnimusic.bandcamp.com/album/olo-the-freebird-remixes",
+        "artist": "Freebird",
+        "title": "Drifter (Freebird Remix)",
+        "providerTrackId": "2060101959",
+        "checkedAt": "2026-09-26T03:22:05.921Z"
+      }
+    },
+    {
+      "id": "freebird-weird-dream-remix",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=1520261769/size=small/bgcol=333333/linkcol=04d9ff/transparent=false/"
+      },
+      "evidence": {
+        "sourceUrl": "https://omnimusic.bandcamp.com/album/olo-the-freebird-remixes",
+        "artist": "Freebird",
+        "title": "Weird Dream (Freebird Remix)",
+        "providerTrackId": "1520261769",
+        "checkedAt": "2026-09-26T03:22:05.921Z"
+      }
+    },
+    {
+      "id": "generic-meds-grapes-of-grease",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=1834225772/size=small/bgcol=333333/linkcol=04d9ff/transparent=false/"
+      },
+      "evidence": {
+        "sourceUrl": "https://omnimusic.bandcamp.com/album/lemon-triangle",
+        "artist": "Generic Meds",
+        "title": "Grapes of Grease",
+        "providerTrackId": "1834225772",
+        "checkedAt": "2026-09-26T03:22:06.488Z"
+      }
+    },
+    {
+      "id": "generic-meds-rumble-strip",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=1043442083/size=small/bgcol=333333/linkcol=04d9ff/transparent=false/"
+      },
+      "evidence": {
+        "sourceUrl": "https://omnimusic.bandcamp.com/album/lemon-triangle",
+        "artist": "Generic Meds",
+        "title": "Rumble Strip",
+        "providerTrackId": "1043442083",
+        "checkedAt": "2026-09-26T03:22:06.491Z"
+      }
+    },
+    {
+      "id": "generic-meds-treats-at-3am",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=3141254559/size=small/bgcol=333333/linkcol=04d9ff/transparent=false/"
+      },
+      "evidence": {
+        "sourceUrl": "https://omnimusic.bandcamp.com/album/lemon-triangle",
+        "artist": "Generic Meds",
+        "title": "Treats @3AM",
+        "providerTrackId": "3141254559",
+        "checkedAt": "2026-09-26T03:22:06.498Z"
+      }
+    },
+    {
+      "id": "fx909-ssx84",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=3734606205/size=small/bgcol=333333/linkcol=04d9ff/transparent=false/"
+      },
+      "evidence": {
+        "sourceUrl": "https://omnimusic.bandcamp.com/album/retrograde-ep",
+        "artist": "FX909",
+        "title": "SSX84",
+        "providerTrackId": "3734606205",
+        "checkedAt": "2026-09-26T03:22:06.889Z"
+      }
+    }
+  ]
+}

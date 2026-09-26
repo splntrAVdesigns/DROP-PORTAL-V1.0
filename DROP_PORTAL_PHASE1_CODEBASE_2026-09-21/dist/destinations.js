@@ -9,7 +9,7 @@ const PROVIDERS={
 };
 
 function externalUrl(value){
-  try{const url=new URL(value);return url.protocol==='https:'?url:null}catch{return null}
+  try{const url=new URL(value);return url.protocol==='https:'&&!url.username&&!url.password&&!url.port?url:null}catch{return null}
 }
 
 function providerFor(url){
@@ -20,6 +20,11 @@ function providerFor(url){
 
 function normalizeEmbedUrl(value,provider){
   const url=externalUrl(value);if(!url)return null;
+  const host=url.hostname.toLowerCase();
+  const allowed=(provider==='BANDCAMP'&&host==='bandcamp.com'&&/^\/EmbeddedPlayer\/(?:album|track)=\d+\//.test(url.pathname))||
+    (provider==='SOUNDCLOUD'&&host==='w.soundcloud.com'&&url.pathname==='/player/')||
+    (provider==='MIXCLOUD'&&host==='www.mixcloud.com'&&url.pathname==='/widget/iframe/');
+  if(!allowed)return null;
   if(provider==='BANDCAMP'&&url.hostname.toLowerCase().replace(/^www\./,'')==='bandcamp.com'&&url.pathname.startsWith('/EmbeddedPlayer/')){
     let href=url.href;
     // The large skin places its playback control below the dashboard's compact frame.
@@ -71,7 +76,8 @@ export function embedPreview(item){
   const preview=item?.preview;
   if(preview?.kind==='provider-embed'&&externalUrl(preview.embedUrl)){
     const provider=preview.provider||'AUTHORIZED PROVIDER';
-    return{url:normalizeEmbedUrl(preview.embedUrl,provider),provider};
+    const url=normalizeEmbedUrl(preview.embedUrl,provider);
+    if(url)return{url,provider};
   }
   const soundcloud=destinations(item).find(d=>d.provider==='SOUNDCLOUD'&&d.roles.has('listen'));
   if(soundcloud){

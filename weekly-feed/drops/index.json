@@ -1,12 +1,13 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-26T02:20:13.110Z",
+  "updatedAt": "2026-09-26T03:22:06.893Z",
   "drops": [
     {
       "id": "005",
       "publishedAt": "2026-09-26T02:20:13.110Z",
       "status": "published",
-      "url": "./2026-09-25.json"
+      "url": "./2026-09-25.json",
+      "enrichmentUrl": "./2026-09-25.enrichment.json"
     },
     {
       "id": "004",

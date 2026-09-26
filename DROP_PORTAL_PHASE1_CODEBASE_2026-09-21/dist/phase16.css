@@ -561,3 +561,12 @@
 /* Phase 2.9: staging readiness is distinct from schedule-armed status. */
 .pipeline-flag{display:block;margin-top:5px;color:#ffbe78;font:700 9px/1.3 monospace;font-style:normal;letter-spacing:.55px}
 .pipeline-flag.is-ready{color:#04d9ff}
+
+/* Preview and status occupy independent rows at every viewport width. */
+.board-actions{align-items:center;gap:12px;min-width:0;flex-wrap:wrap}
+.board-actions .track-status-flags{margin:0;gap:10px}
+.board-actions .details-link{flex:none}
+.priority-row>.preview-unavailable,.priority-row>.preview-trigger{grid-column:2/-1;min-width:0;width:100%;box-sizing:border-box}
+.provider-slot[data-provider="SOUNDCLOUD"] iframe{height:166px}
+.provider-slot[data-provider="MIXCLOUD"] iframe{height:120px}
+.provider-slot[data-provider="BANDCAMP"] iframe{height:42px}
