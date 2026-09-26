@@ -19,6 +19,7 @@ export function preflightLabel(scheduledAt){
     case 'staged':return 'PREFLIGHT STAGED · '+pipelineState.trackCount+' TRACKS';
     case 'published':return 'PUBLICATION VERIFIED';
     case 'stale_stage':return 'STAGING OUTDATED · REVIEW REQUIRED';
+    case 'external_stage':return 'EXTERNAL PREFLIGHT · UNVERIFIED HERE';
     case 'due_without_stage':return 'DUE · RESEARCH NOT STAGED';
     case 'awaiting_research':return 'RESEARCH NOT STAGED';
     default:return 'STAGING STATUS CHECKING';
