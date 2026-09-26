@@ -50,7 +50,18 @@
   "tracks": [
     {
       "id": "section-existence",
-      "artistName": "Section"
+      "artistName": "Section",
+      "title": "Existence",
+      "reason": "Dark jungle selection",
+      "subgenre": "Jungle",
+      "release": "Dispatch Blueprints 029",
+      "label": "Dispatch Recordings",
+      "releaseDate": "2026-09-25",
+      "lane": 2,
+      "score": 97,
+      "confidence": 99,
+      "preview": null,
+      "links": []
     }
   ],
   "mixes": [],
