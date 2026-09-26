@@ -4,20 +4,7 @@
     "id": "005",
     "sequenceNumber": 5,
     "period": "25 SEP 2026",
-    "ids": [
-      "section-existence",
-      "section-surface-dont-escape",
-      "probe-one-ceres",
-      "bop-rumination",
-      "crystal-clear-clearance-peace-sine",
-      "k2t-dream-machines",
-      "bleach-minimalism",
-      "sl8r-callisto",
-      "aural-imbalance-blanket-of-stars",
-      "kessler-thorned-rose",
-      "bop-logistics-miles-and-miles",
-      "k2t-enok-nightlights"
-    ],
+    "ids": [],
     "publishedAt": "2026-09-25T21:00:00-05:00"
   },
   "profileSnapshot": {
@@ -47,25 +34,7 @@
       "time": "21:00"
     }
   },
-  "tracks": [
-    {
-      "id": "section-existence",
-      "artistName": "Section",
-      "title": "Existence",
-      "reason": "Dark jungle selection",
-      "subgenre": "Jungle",
-      "release": "Dispatch Blueprints 029",
-      "label": "Dispatch Recordings",
-      "releaseDate": "2026-09-25",
-      "lane": 2,
-      "score": 97,
-      "confidence": 99,
-      "preview": null,
-      "links": [
-        {}
-      ]
-    }
-  ],
+  "tracks": [],
   "mixes": [],
   "sources": []
 }
