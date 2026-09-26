@@ -1,11 +1,24 @@
 {
   "schemaVersion": 1,
   "drop": {
-    "id": "FAILED-2026-09-25",
+    "id": "005",
     "sequenceNumber": 5,
-    "period": "25 SEP 2026",
-    "ids": [],
-    "publishedAt": ""
+    "period": "2026-09-25 · ONE-OFF",
+    "ids": [
+      "eckom-mindstate",
+      "eckom-black-bridge-remix",
+      "eckom-cognitive-dissonance",
+      "eckom-premonition",
+      "freebird-arpeggiate-remix",
+      "freebird-danach-remix",
+      "freebird-drifter-remix",
+      "freebird-weird-dream-remix",
+      "generic-meds-grapes-of-grease",
+      "generic-meds-rumble-strip",
+      "generic-meds-treats-at-3am",
+      "fx909-ssx84"
+    ],
+    "publishedAt": "2026-09-26T02:20:13.110Z"
   },
   "profileSnapshot": {
     "source": "weeklyOverride",
@@ -34,7 +47,277 @@
       "time": "21:00"
     }
   },
-  "tracks": [],
+  "tracks": [
+    {
+      "id": "eckom-mindstate",
+      "artistName": "Eckom",
+      "title": "Mindstate",
+      "reason": "Tight drum edits and a radiant pad bed build hypnotically, making this the clearest deep-atmospheric entry point.",
+      "subgenre": "Deep / Atmospheric Drum & Bass",
+      "release": "Mindstate EP",
+      "label": "Omni Music",
+      "releaseDate": "2026-09-13",
+      "lane": 1,
+      "score": 90,
+      "confidence": 95,
+      "preview": null,
+      "links": [
+        {
+          "kind": "store-listening",
+          "url": "https://omnimusic.bandcamp.com/album/mindstate-ep"
+        }
+      ],
+      "startHere": true,
+      "priority": 1
+    },
+    {
+      "id": "eckom-black-bridge-remix",
+      "artistName": "Eckom",
+      "title": "Black Bridge (Remix)",
+      "reason": "Expertly chopped drums, piano and memorable hooks move through deep atmospheric timbres for a strong breaks-led selection.",
+      "subgenre": "Jungle / Breaks / Drum & Bass",
+      "release": "Mindstate EP",
+      "label": "Omni Music",
+      "releaseDate": "2026-09-13",
+      "lane": 2,
+      "score": 89,
+      "confidence": 94,
+      "preview": null,
+      "links": [
+        {
+          "kind": "store-listening",
+          "url": "https://omnimusic.bandcamp.com/album/mindstate-ep"
+        }
+      ],
+      "startHere": false,
+      "priority": 4
+    },
+    {
+      "id": "eckom-cognitive-dissonance",
+      "artistName": "Eckom",
+      "title": "Cognitive Dissonance",
+      "reason": "Its more ominous tone, entrancing keys and rolling drums match the queued darkness and deep weighting.",
+      "subgenre": "Deep / Atmospheric Drum & Bass",
+      "release": "Mindstate EP",
+      "label": "Omni Music",
+      "releaseDate": "2026-09-13",
+      "lane": 1,
+      "score": 88,
+      "confidence": 94,
+      "preview": null,
+      "links": [
+        {
+          "kind": "store-listening",
+          "url": "https://omnimusic.bandcamp.com/album/mindstate-ep"
+        }
+      ],
+      "startHere": false,
+      "priority": 6
+    },
+    {
+      "id": "eckom-premonition",
+      "artistName": "Eckom",
+      "title": "Premonition",
+      "reason": "Mesmeric synths and buoyant pads provide a spacious headphone-focused counterweight inside the deep lane.",
+      "subgenre": "Deep / Atmospheric Drum & Bass",
+      "release": "Mindstate EP",
+      "label": "Omni Music",
+      "releaseDate": "2026-09-13",
+      "lane": 1,
+      "score": 86,
+      "confidence": 93,
+      "preview": null,
+      "links": [
+        {
+          "kind": "store-listening",
+          "url": "https://omnimusic.bandcamp.com/album/mindstate-ep"
+        }
+      ],
+      "startHere": false,
+      "priority": 10
+    },
+    {
+      "id": "freebird-arpeggiate-remix",
+      "artistName": "Freebird",
+      "title": "Arpeggiate (Freebird Remix)",
+      "reason": "Freebird's remix framework turns OLO's source into frantic drum-and-bass pressure, fitting the high break-density request.",
+      "subgenre": "Jungle / Breaks / Drum & Bass",
+      "release": "OLO - The Freebird Remixes",
+      "label": "Omni Music",
+      "releaseDate": "2026-09-06",
+      "lane": 2,
+      "score": 90,
+      "confidence": 91,
+      "preview": null,
+      "links": [
+        {
+          "kind": "store-listening",
+          "url": "https://omnimusic.bandcamp.com/album/olo-the-freebird-remixes"
+        }
+      ],
+      "startHere": true,
+      "priority": 2
+    },
+    {
+      "id": "freebird-danach-remix",
+      "artistName": "Freebird",
+      "title": "Danach (Freebird Remix)",
+      "reason": "A verified 2026 Freebird reinterpretation selected from the EP's explicitly frantic drums-and-bass palette.",
+      "subgenre": "Jungle / Breaks / Drum & Bass",
+      "release": "OLO - The Freebird Remixes",
+      "label": "Omni Music",
+      "releaseDate": "2026-09-06",
+      "lane": 2,
+      "score": 87,
+      "confidence": 90,
+      "preview": null,
+      "links": [
+        {
+          "kind": "store-listening",
+          "url": "https://omnimusic.bandcamp.com/album/olo-the-freebird-remixes"
+        }
+      ],
+      "startHere": false,
+      "priority": 7
+    },
+    {
+      "id": "freebird-drifter-remix",
+      "artistName": "Freebird",
+      "title": "Drifter (Freebird Remix)",
+      "reason": "A long-form remix choice that keeps the crate centered on underground, breaks-forward drum and bass.",
+      "subgenre": "Jungle / Breaks / Drum & Bass",
+      "release": "OLO - The Freebird Remixes",
+      "label": "Omni Music",
+      "releaseDate": "2026-09-06",
+      "lane": 2,
+      "score": 88,
+      "confidence": 90,
+      "preview": null,
+      "links": [
+        {
+          "kind": "store-listening",
+          "url": "https://omnimusic.bandcamp.com/album/olo-the-freebird-remixes"
+        }
+      ],
+      "startHere": false,
+      "priority": 5
+    },
+    {
+      "id": "freebird-weird-dream-remix",
+      "artistName": "Freebird",
+      "title": "Weird Dream (Freebird Remix)",
+      "reason": "The EP's cross-genre source material and aggressive remix treatment make this the strongest future-facing outlier.",
+      "subgenre": "Future / Atmospheric Drum & Bass",
+      "release": "OLO - The Freebird Remixes",
+      "label": "Omni Music",
+      "releaseDate": "2026-09-06",
+      "lane": 0,
+      "score": 89,
+      "confidence": 90,
+      "preview": null,
+      "links": [
+        {
+          "kind": "store-listening",
+          "url": "https://omnimusic.bandcamp.com/album/olo-the-freebird-remixes"
+        }
+      ],
+      "startHere": false,
+      "priority": 3
+    },
+    {
+      "id": "generic-meds-grapes-of-grease",
+      "artistName": "Generic Meds",
+      "title": "Grapes of Grease",
+      "reason": "Selected from a verified new album of blissful rhythms and deep atmospherica; individual audio traits remain source-limited.",
+      "subgenre": "Deep / Atmospheric Drum & Bass",
+      "release": "Lemon Triangle",
+      "label": "Omni Music",
+      "releaseDate": "2026-09-20",
+      "lane": 1,
+      "score": 82,
+      "confidence": 82,
+      "preview": null,
+      "links": [
+        {
+          "kind": "store-listening",
+          "url": "https://omnimusic.bandcamp.com/album/lemon-triangle"
+        }
+      ],
+      "startHere": false,
+      "priority": 9
+    },
+    {
+      "id": "generic-meds-rumble-strip",
+      "artistName": "Generic Meds",
+      "title": "Rumble Strip",
+      "reason": "A verified album cut used to deepen the atmospheric lane without repeating tracks from the September 23 drop.",
+      "subgenre": "Deep / Atmospheric Drum & Bass",
+      "release": "Lemon Triangle",
+      "label": "Omni Music",
+      "releaseDate": "2026-09-20",
+      "lane": 1,
+      "score": 82,
+      "confidence": 82,
+      "preview": null,
+      "links": [
+        {
+          "kind": "store-listening",
+          "url": "https://omnimusic.bandcamp.com/album/lemon-triangle"
+        }
+      ],
+      "startHere": false,
+      "priority": 11
+    },
+    {
+      "id": "generic-meds-treats-at-3am",
+      "artistName": "Generic Meds",
+      "title": "Treats @3AM",
+      "reason": "The label specifically highlights its addictive melodic patterns, making it a strong late-night deep selection.",
+      "subgenre": "Deep / Atmospheric Drum & Bass",
+      "release": "Lemon Triangle",
+      "label": "Omni Music",
+      "releaseDate": "2026-09-20",
+      "lane": 1,
+      "score": 86,
+      "confidence": 92,
+      "preview": null,
+      "links": [
+        {
+          "kind": "store-listening",
+          "url": "https://omnimusic.bandcamp.com/album/lemon-triangle"
+        }
+      ],
+      "startHere": false,
+      "priority": 8
+    },
+    {
+      "id": "fx909-ssx84",
+      "artistName": "FX909",
+      "title": "SSX84",
+      "reason": "Serene pads, gently rolling drums and placid melodies give the future lane a polished atmospheric closer.",
+      "subgenre": "Future / Atmospheric Drum & Bass",
+      "release": "Retrograde EP",
+      "label": "Omni Music",
+      "releaseDate": "2026-09-20",
+      "lane": 0,
+      "score": 91,
+      "confidence": 96,
+      "preview": null,
+      "links": [
+        {
+          "kind": "store-listening",
+          "url": "https://omnimusic.bandcamp.com/album/retrograde-ep"
+        }
+      ],
+      "startHere": true,
+      "priority": 12
+    }
+  ],
   "mixes": [],
-  "sources": []
+  "sources": [
+    "https://omnimusic.bandcamp.com/album/mindstate-ep",
+    "https://omnimusic.bandcamp.com/album/olo-the-freebird-remixes",
+    "https://omnimusic.bandcamp.com/album/lemon-triangle",
+    "https://omnimusic.bandcamp.com/album/retrograde-ep"
+  ]
 }
