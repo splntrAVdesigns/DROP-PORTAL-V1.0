@@ -27,6 +27,9 @@
     },
     "api/drop-settings.js": {
       "maxDuration": 30
+    },
+    "api/admin-session.js": {
+      "maxDuration": 10
     }
   },
   "headers": [
