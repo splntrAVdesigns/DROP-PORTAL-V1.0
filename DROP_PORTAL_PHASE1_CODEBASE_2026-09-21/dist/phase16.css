@@ -485,3 +485,70 @@
 }
 @media(max-width:375px){.utilities button{font-size:9px;padding:8px 7px}.mobile-layout-editor .hero-palettes button{width:30px}}
 .utilities #edit[hidden]{display:none!important}
+
+/* Phase 2.8.2 — masked publisher unlock */
+.publisher-auth-state{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+  padding:10px 12px;
+  border:1px solid rgba(4,217,255,.33);
+  border-radius:6px;
+  background:rgba(4,217,255,.045);
+  color:#04d9ff;
+  font:700 10px/1.5 monospace;
+  letter-spacing:.3px;
+}
+.publisher-auth-state button{
+  color:#e1faff;
+  padding:5px 10px;
+  background:#15282e;
+  border:1px solid #315b67;
+  border-radius:5px;
+  cursor:pointer;
+}
+.publisher-auth-dialog{
+  width:min(430px,calc(100vw - 28px));
+  max-width:430px;
+  max-height:calc(100vh - 30px);
+  padding:28px;
+  background:#101b20;
+  color:#eef6f8;
+  border:1px solid #386471;
+  border-radius:12px;
+  box-shadow:0 12px 60px rgba(0,0,0,.8);
+  box-sizing:border-box;
+}
+.publisher-auth-dialog::backdrop{background:rgba(0,0,0,.82);backdrop-filter:blur(4px)}
+.publisher-auth-dialog h2{font-size:23px;margin:0 0 12px}
+.publisher-auth-dialog p{color:#abc1ca;font:13px/1.6 system-ui,sans-serif}
+.publisher-auth-dialog label{
+  display:block;
+  font:700 11px/1.4 monospace;
+  letter-spacing:1px;
+  margin:18px 0 8px;
+  color:#9ceafb;
+}
+.publisher-auth-dialog input[type=password]{
+  width:100%;
+  box-sizing:border-box;
+  min-height:45px;
+  background:#071216;
+  border:1px solid #3b6977;
+  border-radius:5px;
+  color:#fff;
+  padding:12px;
+  font-size:18px;
+  letter-spacing:3px;
+}
+.publisher-auth-dialog input[type=password]:focus{outline:2px solid #04d9ff;outline-offset:2px}
+.publisher-auth-dialog [role=alert]{color:#ff9f92;min-height:1em;margin:10px 0}
+.publisher-auth-actions{display:flex;justify-content:flex-end;gap:10px}
+.publisher-auth-actions button{
+  padding:11px 16px;
+  border:1px solid #35606a;
+  border-radius:5px;
+  cursor:pointer;
+}
+.publisher-auth-actions .primary{color:#02dbff;background:rgba(4,217,255,.09)}
