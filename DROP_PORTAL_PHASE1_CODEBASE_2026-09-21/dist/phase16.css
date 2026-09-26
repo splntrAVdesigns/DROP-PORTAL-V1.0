@@ -552,3 +552,7 @@
   cursor:pointer;
 }
 .publisher-auth-actions .primary{color:#02dbff;background:rgba(4,217,255,.09)}
+
+/* Phase 2.9: staging readiness is distinct from schedule-armed status. */
+.pipeline-flag{display:block;margin-top:5px;color:#ffbe78;font:700 9px/1.3 monospace;font-style:normal;letter-spacing:.55px}
+.pipeline-flag.is-ready{color:#04d9ff}
