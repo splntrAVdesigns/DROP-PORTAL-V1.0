@@ -48,6 +48,12 @@
     },
     "api/personal-data.js": {
       "maxDuration": 30
+    },
+    "api/personal-drops.js": {
+      "maxDuration": 30
+    },
+    "api/personal-worker.js": {
+      "maxDuration": 60
     }
   },
   "headers": [

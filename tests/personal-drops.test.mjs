@@ -1,0 +1,88 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {PGlite} from '@electric-sql/pglite';
+import {parseHTML} from 'linkedom';
+import {PERSONAL_DEFAULTS} from '../lib/personal-contracts.js';
+import {nextPersonalOccurrence,oneTimeInstant,curatePersonalDrop} from '../lib/personal-discovery.js';
+import {withVerifiedPreviews} from '../api/personal-worker.js';
+const a='11111111-1111-4111-8111-111111111111',b='22222222-2222-4222-8222-222222222222';
+
+test('published preview amendments add safe players without replacing original evidence',async()=>{
+  const base=new URL('../weekly-feed/drops/',import.meta.url);
+  const payload=JSON.parse(await readFile(new URL('2026-09-30.json',base)));
+  const amendment=JSON.parse(await readFile(new URL('2026-09-30.enrichment.json',base)));
+  const entry={id:'006',url:'./2026-09-30.json'};
+  const merged=withVerifiedPreviews(payload,amendment,entry);
+  const amendedId=amendment.tracks[0].id;
+  assert.equal(merged.tracks.find(t=>t.id===amendedId).preview?.provider,'BANDCAMP');
+  assert.equal(merged.tracks[0].id,payload.tracks[0].id);
+  const hostile=structuredClone(amendment);
+  hostile.tracks[0].preview.embedUrl='https://example.com/widget/';
+  assert.equal(withVerifiedPreviews(payload,hostile,entry).tracks.find(t=>t.id===amendedId).preview,null);
+  hostile.tracks[1].id='unknown-track';
+  assert.equal(withVerifiedPreviews(payload,hostile,entry),payload);
+});
+
+test('weekly and one-time schedules respect Chicago time and date bounds',()=>{
+  assert.equal(nextPersonalOccurrence(3,'19:00',new Date('2026-10-01T12:00:00Z')).toISOString(),'2026-10-08T00:00:00.000Z');
+  assert.equal(oneTimeInstant('2026-10-01','18:00',new Date('2026-10-01T15:00:00Z')).toISOString(),'2026-10-01T23:00:00.000Z');
+  assert.throws(()=>oneTimeInstant('2026-09-30','18:00',new Date('2026-10-01T15:00:00Z')));
+});
+
+test('private curator uses release evidence and taste, and never fills a shortage with fake results',()=>{
+  const profile={...PERSONAL_DEFAULTS,count:10,artists:['Artist 3'],labels:['Label A'],searchPast:'1mo'};
+  const tracks=Array.from({length:12},(_,i)=>({id:'track-'+i,artistName:'Artist '+i,title:'Cut '+i,label:'Label A',
+    releaseDate:'2026-09-20',lane:i%3,score:80,links:[{kind:'listen',url:'https://example.com/'+i}],reason:'Verified release',preview:null}));
+  const picked=curatePersonalDrop([{tracks}],profile,[],new Date('2026-10-01T23:00:00Z'));
+  assert.equal(picked.status,'ready');assert.equal(picked.result.tracks[0].id,'track-3');assert.equal(picked.result.tracks.length,10);
+  assert.equal(curatePersonalDrop([{tracks:tracks.slice(0,9)}],profile,[],new Date('2026-10-01T23:00:00Z')).status,'needs_research');
+  assert.equal(curatePersonalDrop([{tracks}],{...profile,searchPast:'1mo'},[],new Date('2026-12-01T23:00:00Z')).status,'needs_research');
+  assert.equal(curatePersonalDrop([{tracks}],{...profile,focus:{...profile.focus,labelSpecific:true},labels:['Other']},[],new Date('2026-10-01T23:00:00Z')).status,'needs_research');
+});
+
+test('migration 003 isolates plans and drops for two accounts and deletes only the owner data',async()=>{
+  const db=new PGlite();
+  try{
+    await db.exec(`create role anon; create role authenticated; create role service_role; create schema auth;
+      create table auth.users(id uuid primary key); insert into auth.users values('${a}'),('${b}');
+      create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+      grant usage on schema auth to authenticated; grant execute on function auth.uid() to authenticated;`);
+    await db.exec(await readFile(new URL('../db/migrations/001_personal_discovery.sql',import.meta.url),'utf8'));
+    await db.exec(await readFile(new URL('../db/migrations/003_personal_drops.sql',import.meta.url),'utf8'));
+    await db.exec('set role authenticated');
+    const as=async id=>db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);
+    const save=async()=>db.query('select * from public.dp_save_personal_plan($1::jsonb,null,null,false,0,3,$2::time,$3::timestamptz)',
+      [JSON.stringify(PERSONAL_DEFAULTS),'19:00',nextPersonalOccurrence(3,'19:00').toISOString()]);
+    await as(a);await save();
+    await db.query("select * from public.dp_request_one_time(now(),$1::jsonb)",[JSON.stringify(PERSONAL_DEFAULTS)]);
+    await as(b);await save();
+    assert.equal((await db.query('select * from public.dp_personal_plans')).rows.length,1);
+    assert.equal((await db.query('select * from public.dp_personal_drops')).rows.length,0);
+    await assert.rejects(db.query("update public.dp_personal_drops set status='ready'"),/permission denied/);
+    await as(a);
+    assert.equal((await db.query('select * from public.dp_personal_drops')).rows.length,1);
+    await db.query('select public.dp_clear_personal_data()');
+    assert.equal((await db.query('select * from public.dp_personal_drops')).rows.length,0);
+    await as(b);assert.equal((await db.query('select * from public.dp_personal_plans')).rows.length,1);
+  }finally{await db.close();}
+});
+
+test('private dashboard gates the board and shows only the signed-in account drops',async()=>{
+  const {window}=parseHTML('<html><body><header><nav></nav><div class="utilities"><button id="tuner"></button><button id="edit"></button><div id="palette-controls"></div></div></header><span id="saved-count"></span><main id="app"></main></body></html>');
+  globalThis.window=window;globalThis.document=window.document;globalThis.location={pathname:'/',hash:''};
+  try{
+    const {personal}=await import('../DROP_PORTAL_PHASE1_CODEBASE_2026-09-21/dist/personal.js');
+    const {privateDrops}=await import('../DROP_PORTAL_PHASE1_CODEBASE_2026-09-21/dist/personal-drops-client.js');
+    const {renderPrivateDashboard}=await import('../DROP_PORTAL_PHASE1_CODEBASE_2026-09-21/dist/personal-dashboard.js');
+    personal.checked=true;personal.user=null;renderPrivateDashboard();
+    assert.match(window.document.querySelector('#app').textContent,/SEND SIGN-IN CODE/);
+    assert.doesNotMatch(window.document.querySelector('#app').textContent,/Public weekly drop/);
+    personal.user={id:a,email:'a@example.com'};privateDrops.owner=a;privateDrops.plan=null;privateDrops.drops=[];renderPrivateDashboard();
+    assert.match(window.document.querySelector('#app').textContent,/Set your taste and weekly time/);
+    privateDrops.drops=[{id:'11111111-1111-4111-8111-111111111112',kind:'one_time',status:'ready',result:{note:'Verified catalog',tracks:[{id:'t1',artistName:'A',title:'Private A',personalRank:1,links:[],releaseDate:'2026-09-30',reason:'A',lane:0}]}}];
+    renderPrivateDashboard();assert.match(window.document.querySelector('#app').textContent,/Private A/);
+    personal.user={id:b,email:'b@example.com'};privateDrops.owner=b;privateDrops.drops=[];renderPrivateDashboard();
+    assert.doesNotMatch(window.document.querySelector('#app').textContent,/Private A/);
+  }finally{delete globalThis.window;delete globalThis.document;delete globalThis.location;}
+});

@@ -4,11 +4,18 @@ import {read} from './storage.js';
 import {tracks} from './data.js';
 import {localDate} from './contracts.js';
 import {scheduleState} from './schedule.js';
+import {privateDrops,savePrivatePlan,requestOneTimeDig} from './personal-drops-client.js';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sliders=[['future','Future / Experimental'],['deep','Deep / Minimal / Techy'],['jungle','Jungle / Breaks'],['depth','Discovery depth'],['experimental','Experimental bias'],['floor','Floor → Headphones'],['darkness','Darkness'],['breaks','Break density'],['count','Track count']];
 let scope='base',draft=null,owner=null,revision=null,dirty=false,busy=false,message='',email='',codeSent=false;
+let privatePlanEnabled=false;
+export function enablePrivatePlanUI(){privatePlanEnabled=true;}
 const host=()=>document.querySelector('#personal-tuner');
-function targetDate(){return scheduleState.data?.nextDropAt?localDate(scheduleState.data.nextDropAt):localDate(new Date());}
+function targetDate(){return privateDrops.plan?.next_drop_at?localDate(privateDrops.plan.next_drop_at):localDate(new Date());}
+function oneTimeDefault(){
+  const next=new Date(Math.ceil((Date.now()+60000)/3600000)*3600000);
+  return {date:localDate(next),time:new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',hour:'2-digit',hourCycle:'h23'}).format(next).padStart(2,'0')+':00'};
+}
 function adopt(){
   if(owner!==personal.user?.id){owner=personal.user?.id;dirty=false;draft=null;scope='base';message='';}
   if(!dirty){draft=structuredClone(scope==='weekly'?(personal.state?.weekly_profile||personal.state?.base_profile||PERSONAL_DEFAULTS):(personal.state?.base_profile||PERSONAL_DEFAULTS));revision=personal.state?.revision||0;}
@@ -21,6 +28,7 @@ function capture(){
 }
 export function renderPersonalTuner(){
   const el=host();if(!el)return;adopt();
+  const onceDefault=oneTimeDefault();
   const signed=!!personal.user;
   const account=!personal.checked?'<p role="status">Checking personal account…</p>':personal.configured===null?'<p role="status">Personal account status could not be checked.</p><button type="button" data-personal="reload">Retry</button>':!personal.configured?'<p class="notice">Personal accounts are awaiting setup. Your current drop and device crate remain available.</p>':signed?`<p class="personal-account">${esc(personal.user.email)} <button type="button" data-personal="signout">Sign out</button></p>`:`<form data-personal-login><label for="personal-email">Sign in with email</label><input id="personal-email" type="email" autocomplete="email" required value="${esc(email)}">${codeSent?'<label for="personal-code">Email code</label><input id="personal-code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,8}" required>':''}<button class="primary" type="submit" ${busy?'disabled':''}>${codeSent?'VERIFY CODE':'SEND SIGN-IN CODE'}</button>${codeSent?'<button type="button" data-personal="newcode">Use another email / resend</button>':''}<p class="notice">Private beta access. Your personal account is separate from publisher access.</p></form>`;
   el.innerHTML=`<section class="personal-taste"><h3>MY TASTE</h3>${account}${message||personal.error?`<p role="status">${esc(message||personal.error)}</p>`:''}${signed?`
@@ -33,10 +41,17 @@ export function renderPersonalTuner(){
     <h3>DISCOVERY FOCUS</h3><div class="focus-chips" role="group" aria-label="Release period"><button type="button" aria-pressed="true">Recent Releases</button><button type="button" disabled title="Archive source coverage is being validated">The Archives · soon</button><button type="button" disabled title="Forthcoming-release coverage is being validated">Future · soon</button></div>
     <label for="personal-past">Search the past</label><select id="personal-past">${[['1mo','1 month'],['3mo','3 months'],['6mo','6 months'],['1yr','1 year']].map(([v,l])=>`<option value="${v}" ${draft.searchPast===v?'selected':''}>${l}</option>`).join('')}</select>
     <div class="focus-chips" role="group" aria-label="Discovery focus">${[['labels','Label Specific'],['anthem','Anthem'],['groove','Groove'],['deep-dig','Deep Dig']].map(([v,l])=>`<button type="button" data-focus="${v}" aria-pressed="${v==='labels'?draft.focus.labelSpecific:draft.focus.flags.includes(v)}">${l}</button>`).join('')}</div>
-    <p class="notice">Save your direction now. These private preferences connect to personal research in the next phase; the published drop is shared.</p>
+    <p class="notice">Your taste directs your own private weekly and one-time digs.</p>
     <details class="personal-fine"><summary>Fine tune</summary>${sliders.map(([k,label])=>`<label class="range-label" for="personal-${k}">${label}<output>${draft[k]}</output></label><input id="personal-${k}" data-personal-range="${k}" class="range-input" type="range" min="${k==='count'?10:0}" max="${k==='count'?15:100}" value="${draft[k]}">`).join('')}<label class="check"><input type="checkbox" id="personal-mixes" ${draft.mixes?'checked':''}>Include DJ mixes</label></details>
-    <button type="button" class="primary tuner-save" data-personal="save">${busy?'SAVING…':'SAVE '+(scope==='base'?'BASE TASTE':'THIS WEEK’S TASTE')}</button>${scope==='weekly'?'<button type="button" data-personal="clear">Use base taste this week</button>':''}<button type="button" data-personal="reload">Reload saved taste</button>
+    <section class="private-plan"><h3>MY WEEKLY DROP</h3><p>Choose a day and hour in Central time. Saving this plan also saves the taste shown above.</p><div class="private-plan-row">
+    <label>DAY<select id="private-weekday">${['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].map((day,i)=>`<option value="${i}" ${Number(privateDrops.plan?.weekday??3)===i?'selected':''}>${day}</option>`).join('')}</select></label>
+    <label>TIME<select id="private-time">${Array.from({length:24},(_,h)=>String(h).padStart(2,'0')+':00').map(time=>`<option value="${time}" ${time===String(privateDrops.plan?.local_time||'19:00').slice(0,5)?'selected':''}>${time}</option>`).join('')}</select></label></div>
+    <button type="button" class="primary tuner-save" data-personal="plan">${busy?'SAVING…':'SAVE MY WEEKLY DROP PLAN'}</button>
+    ${privateDrops.plan?`<p class="notice">Next personal drop: ${esc(new Date(privateDrops.plan.next_drop_at).toLocaleString('en-US',{timeZone:'America/Chicago',dateStyle:'medium',timeStyle:'short'}))} CT</p>`:''}</section>
+    <section class="private-plan"><h3>ONE TIME DIG</h3><p>Queue one additional personal drop without changing your weekly schedule. Save your taste above first if you have unsaved edits.</p><div class="private-plan-row"><label>DATE<input id="private-once-date" type="date" min="${localDate(new Date())}" value="${onceDefault.date}"></label><label>TIME<select id="private-once-time">${Array.from({length:24},(_,h)=>String(h).padStart(2,'0')+':00').map(time=>`<option value="${time}" ${time===onceDefault.time?'selected':''}>${time}</option>`).join('')}</select></label></div><button type="button" data-personal="once">QUEUE ONE TIME DIG</button></section>
+    <button type="button" class="tuner-save" data-personal="save">SAVE ${scope==='base'?'BASE TASTE':'THIS WEEK’S TASTE'} ONLY</button>${scope==='weekly'?'<button type="button" data-personal="clear">Use base taste this week</button>':''}<button type="button" data-personal="reload">Reload saved taste</button>
     </fieldset><details class="personal-data"><summary>History & privacy</summary><p>Saves are positive preferences. Heard is neutral. Unsaved tracks are not treated as dislikes.</p><label class="check"><input type="checkbox" id="personal-learning" ${personal.state?.learning_enabled?'checked':''} ${busy?'disabled':''}>Keep feedback for future taste learning</label><p class="notice">Learning is not active yet. Turning this off removes learning events while keeping your crate.</p><button type="button" data-personal="import">IMPORT THIS DEVICE’S SAVED / HEARD HISTORY</button><p class="notice">Import only your own history. Existing account choices win; local history stays available after sign-out.</p><button type="button" data-personal="export">EXPORT MY DATA</button><label for="personal-delete">Type DELETE MY TASTE to remove personal preferences and history</label><input id="personal-delete" autocomplete="off"><button type="button" data-personal="delete">DELETE MY TASTE DATA</button><p class="notice">This does not delete your sign-in account or this device’s guest history.</p></details>`:''}</section>`;
+  if(!privatePlanEnabled)el.querySelectorAll('.private-plan').forEach(section=>section.remove());
 }
 async function operate(fn){if(busy)return;capture();busy=true;message='';renderPersonalTuner();try{await fn();}catch(e){message=e.message;}finally{busy=false;renderPersonalTuner();}}
 export function setupPersonalTuner(){
@@ -62,9 +77,15 @@ export function setupPersonalTuner(){
     const action=b.dataset.personal;if(!action)return;
     // Capture values before rendering the busy state replaces the input nodes.
     const deletion=host().querySelector('#personal-delete')?.value;
+    const planFields={weekday:Number(host().querySelector('#private-weekday')?.value),time:host().querySelector('#private-time')?.value};
+    const onceFields={date:host().querySelector('#private-once-date')?.value,time:host().querySelector('#private-once-time')?.value};
     if(action==='newcode'){codeSent=false;message='';renderPersonalTuner();return;}
     operate(async()=>{
       if(action==='save'){const profile=cleanPersonalProfile(draft);await savePersonal({scope,profile,targetDate:targetDate(),expectedRevision:revision});dirty=false;message='Personal taste saved privately.';}
+      if(action==='plan'){const profile=cleanPersonalProfile(draft);
+        await savePrivatePlan({scope,profile,...planFields,expectedRevision:revision});await loadPersonal();dirty=false;message='Weekly drop plan saved privately.';}
+      if(action==='once'){if(dirty)throw Error('Save your taste or weekly plan before queuing this dig.');
+        await requestOneTimeDig(onceFields);message='One Time Dig queued for your account.';}
       if(action==='clear'){await savePersonal({scope:'clear-weekly',expectedRevision:revision});dirty=false;message='Base taste will apply.';}
       if(action==='reload'){dirty=false;await loadPersonal();}
       if(action==='signout'){await signOut();dirty=false;}

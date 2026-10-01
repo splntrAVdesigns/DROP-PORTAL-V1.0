@@ -1,0 +1,22 @@
+name: DROP PORTAL Personal Drops
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: drop-portal-personal-worker
+  cancel-in-progress: false
+jobs:
+  run:
+    if: ${{ vars.DROP_PORTAL_PERSONAL_WORKER_ENABLED == 'true' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Process due private drops
+        env:
+          WORKER_SECRET: ${{ secrets.DROP_PORTAL_WORKER_SECRET }}
+        run: |
+          test -n "$WORKER_SECRET"
+          curl --fail --silent --show-error --max-time 40 \
+            -X POST -H "Authorization: Bearer $WORKER_SECRET" \
+            https://drop-portal-v1-0.vercel.app/api/personal-worker

@@ -1,0 +1,93 @@
+import {createClient} from '@supabase/supabase-js';
+import {timingSafeEqual} from 'node:crypto';
+import {gh} from '../lib/repository.js';
+import {nextPersonalOccurrence,curatePersonalDrop} from '../lib/personal-discovery.js';
+import {localDate} from '../lib/contracts.js';
+
+const reply=(res,status,data)=>{res.setHeader('Cache-Control','no-store');return res.status(status).json(data);};
+const fail=error=>{throw Error(error?.message||'Personal worker storage error');};
+const readJson=async(path)=>{
+  const file=await gh('contents/'+path+'?ref=main');
+  return JSON.parse(Buffer.from(file.content,'base64').toString('utf8'));
+};
+const dropPath=url=>/^\.\/[\w.-]+\.json$/.test(url||'')?'weekly-feed/drops/'+url.slice(2):null;
+const officialPreview=preview=>{
+  if(preview?.kind!=='provider-embed'||typeof preview.embedUrl!=='string')return false;
+  try{
+    const url=new URL(preview.embedUrl);
+    if(url.protocol!=='https:'||url.username||url.password||url.port)return false;
+    return url.hostname==='bandcamp.com'&&url.pathname.startsWith('/EmbeddedPlayer/')||
+      url.hostname==='w.soundcloud.com'&&url.pathname.startsWith('/player/')||
+      url.hostname==='www.mixcloud.com'&&url.pathname.startsWith('/widget/');
+  }catch{return false;}
+};
+export function withVerifiedPreviews(payload,amendment,entry){
+  if(!payload||!Array.isArray(payload.tracks)||!amendment||amendment.schemaVersion!==1||
+    amendment.dropId!==entry.id||amendment.sourcePayload!==entry.url||!Array.isArray(amendment.tracks))return payload;
+  const ids=new Set(payload.tracks.map(t=>t.id)),seen=new Set(),previews=new Map();
+  for(const row of amendment.tracks){
+    if(!ids.has(row?.id)||seen.has(row.id))return payload;
+    seen.add(row.id);
+    if(officialPreview(row.preview))previews.set(row.id,row.preview);
+  }
+  return {...payload,tracks:payload.tracks.map(t=>({...t,preview:t.preview||previews.get(t.id)||null}))};
+}
+async function catalog(){
+  const index=await readJson('weekly-feed/drops/index.json');
+  const entries=index.drops.filter(e=>e.status==='published'&&!e.id.startsWith('TEST-')&&dropPath(e.url)).slice(0,12);
+  return Promise.all(entries.map(async e=>{
+    const payload=await readJson(dropPath(e.url));
+    if(!dropPath(e.enrichmentUrl))return payload;
+    try{return withVerifiedPreviews(payload,await readJson(dropPath(e.enrichmentUrl)),e);}
+    catch{return payload;}
+  }));
+}
+export async function runPersonalWorker(client,{now=new Date(),catalogLoader=catalog,limit=20}={}){
+  const due=now.toISOString(),summary={queued:0,ready:0,needsResearch:0,errors:[]};
+  const schedules=await client.from('dp_personal_plans').select('*').lte('next_drop_at',due).order('next_drop_at').limit(limit);if(schedules.error)fail(schedules.error);
+  for(const plan of schedules.data){
+    try{
+      const profile=await client.from('dp_personal_profiles').select('*').eq('user_id',plan.user_id).single();if(profile.error)fail(profile.error);
+      const date=localDate(plan.next_drop_at);
+      const snapshot=profile.data.weekly_profile&&profile.data.target_date===date?profile.data.weekly_profile:profile.data.base_profile;
+      const insert=await client.from('dp_personal_drops').upsert({user_id:plan.user_id,kind:'weekly',scheduled_at:plan.next_drop_at,profile_snapshot:snapshot},{onConflict:'user_id,kind,scheduled_at',ignoreDuplicates:true});if(insert.error)fail(insert.error);
+      const next=nextPersonalOccurrence(plan.weekday,String(plan.local_time).slice(0,5),new Date(plan.next_drop_at));
+      const advanced=await client.from('dp_personal_plans').update({next_drop_at:next.toISOString(),revision:plan.revision+1,updated_at:due})
+        .eq('user_id',plan.user_id).eq('revision',plan.revision).eq('next_drop_at',plan.next_drop_at);if(advanced.error)fail(advanced.error);
+      summary.queued++;
+    }catch(e){summary.errors.push('schedule:'+String(e.message).slice(0,90));}
+  }
+  const jobs=await client.from('dp_personal_drops').select('*').eq('status','queued').lte('scheduled_at',due).order('scheduled_at').limit(limit);if(jobs.error)fail(jobs.error);
+  let releases=null;
+  for(const job of jobs.data){
+    try{
+      const claim=await client.from('dp_personal_drops').update({status:'running',attempts:job.attempts+1,updated_at:due}).eq('id',job.id).eq('status','queued').select('id');
+      if(claim.error)fail(claim.error);if(!claim.data?.length)continue;
+      releases??=await catalogLoader();
+      const f=await client.from('dp_feedback').select('track_id,kind,value').eq('user_id',job.user_id);if(f.error)fail(f.error);
+      const selection=curatePersonalDrop(releases,job.profile_snapshot,f.data,new Date(job.scheduled_at));
+      const saved=await client.from('dp_personal_drops').update({status:selection.status,result:selection.result||null,status_detail:selection.detail||null,updated_at:new Date().toISOString()})
+        .eq('id',job.id).eq('status','running');if(saved.error)fail(saved.error);
+      if(selection.status==='ready')summary.ready++;else summary.needsResearch++;
+    }catch(e){
+      summary.errors.push('drop:'+String(e.message).slice(0,90));
+      await client.from('dp_personal_drops').update({status:job.attempts>=2?'needs_research':'queued',
+        status_detail:job.attempts>=2?'Research source unavailable after three attempts.':'Research source temporarily unavailable; retrying.',
+        updated_at:new Date().toISOString()}).eq('id',job.id).eq('status','running');
+    }
+  }
+  return summary;
+}
+export default async function handler(req,res){
+  if(req.method!=='POST')return reply(res,405,{message:'Method not allowed.'});
+  const secret=process.env.DROP_PORTAL_WORKER_SECRET;
+  const supplied=String(req.headers.authorization||'').replace(/^Bearer /,'');
+  if(!req.headers.authorization?.startsWith('Bearer ')||!secret||secret.length<32||Buffer.byteLength(secret)!==Buffer.byteLength(supplied)||
+    !timingSafeEqual(Buffer.from(secret),Buffer.from(supplied)))return reply(res,401,{message:'Worker authorization required.'});
+  if(!process.env.SUPABASE_SERVICE_ROLE_KEY||!process.env.SUPABASE_URL)return reply(res,503,{message:'Private worker storage is not configured.'});
+  try{
+    const client=createClient(process.env.SUPABASE_URL,process.env.SUPABASE_SERVICE_ROLE_KEY,
+      {auth:{persistSession:false,autoRefreshToken:false}});
+    return reply(res,200,await runPersonalWorker(client));
+  }catch(e){return reply(res,503,{message:'Private worker failed; queued requests remain visible.'});}
+}

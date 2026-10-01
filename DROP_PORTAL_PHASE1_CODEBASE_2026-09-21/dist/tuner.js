@@ -1,10 +1,12 @@
-import {renderPersonalTuner,setupPersonalTuner} from './personal-tuner.js';
+import {renderPersonalTuner,setupPersonalTuner,enablePrivatePlanUI} from './personal-tuner.js';
 import {loadInquiry,saveInquiry,saveDropSettings} from './inquiry.js';
 import {scheduleState,saveSchedule,formatNextDrop,nextDropFields,scheduleMode,scheduleLabel} from './schedule.js';
 import {localDate,cleanProfile} from './contracts.js';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const labels=[['future','Future / Experimental'],['deep','Deep / Minimal / Techy'],['jungle','Jungle / Breaks / Leftfield'],['depth','Discovery depth'],['experimental','Experimental bias'],['floor','Floor → Headphones'],['darkness','Darkness'],['breaks','Break density'],['count','Track count']];
 let scope='base',snapshot=null,drafts=null,scheduleDraft=null,busy=false,error='',conflict=false,dirty=false,epoch=0,authUnlocked=false,researchResult=null,researchBusy=false,researchError='';
+let legacyPublisher=true;
+export function usePrivateTuner(){legacyPublisher=false;enablePrivatePlanUI();}
 let onSaved=()=>{},notify=()=>{};
 const dialog=()=>document.querySelector('#tuner-dialog');
 const hourLabel=value=>{const h=Number(value.slice(0,2));return `${h%12||12}:00 ${h<12?'AM':'PM'}`;};
@@ -30,6 +32,10 @@ function render(){
   <section class="schedule-editor" aria-label="Drop schedule control"><div class="schedule-editor-head"><div><span>DROP SCHEDULE</span><small>Production publication control</small></div><em>WEEKLY · ${esc(s.defaultSchedule.weekday.slice(0,3))} ${hourLabel(s.defaultSchedule.time)} CT</em></div><div class="schedule-row"><label><span>DAY</span><input id="schedule-date" type="date" min="${localDate(new Date())}" value="${esc(scheduleDraft.date)}"></label><label><span>TIME</span><select id="schedule-time">${Array.from({length:24},(_,h)=>String(h).padStart(2,'0')+':00').map(v=>`<option value="${v}" ${v===scheduleDraft.time?'selected':''}>${hourLabel(v)}</option>`).join('')}</select></label><label><span>MODE</span><select id="schedule-mode"><option value="one-off" ${scheduleDraft.mode==='one-off'?'selected':''}>This drop only</option><option value="weekly-default" ${scheduleDraft.mode==='weekly-default'?'selected':''}>Make weekly default</option></select></label><button class="primary schedule-save" data-tuner-combined ${unconfigured?'disabled title="Publisher credentials required"':''}>SAVE DROP SETTINGS</button></div><p class="schedule-armed">${esc(scheduleLabel())} · ${esc(formatNextDrop(s))}</p><p class="schedule-help">One save QUEUES this tab\'s preferences and selected schedule; research staging is verified separately. America/Chicago.</p></section></fieldset>
   <section class="research-review" aria-label="Research intake"><h3>RESEARCH INTAKE</h3><p>Discovery priority is based on source evidence and your saved depth setting. Audio and musical fit still need review. Shortlisting does not stage a drop.</p><button data-research-refresh ${researchBusy?'disabled':''}>${researchBusy?'LOADING…':'VIEW CANDIDATES'}</button>${researchError?`<p role="alert">${esc(researchError)}</p>`:''}${researchResult?`<p role="status">${researchResult.candidates.length} candidates · ${researchResult.sources.length} registered sources · last run ${esc(researchResult.runs[0]?.at||'none')}<br>${researchResult.runs[0]?.window?`SEARCH THE PAST ${esc(researchResult.runs[0].window.from)} → ${esc(researchResult.runs[0].window.to)} · DEPTH ${esc(researchResult.runs[0].profileSnapshot?.depth)}`:''}</p><details><summary>Source coverage</summary>${(researchResult.runs[0]?.sources||[]).map(s=>`<p>${esc(s.sourceId)} · ${esc(s.state)} · ${esc(s.count)} candidates · ${esc((s.coverage||[]).length)} query windows · ${esc((s.coverage||[]).filter(c=>c.state==='truncated').length)} truncated · ${esc((s.coverage||[]).filter(c=>c.state==='error').length)} errors</p>`).join('')}</details><ul>${researchResult.candidates.slice(0,30).map(c=>`<li><strong>${esc(c.artistName)} — ${esc(c.title)}</strong><br>${esc(c.releaseDate||'Release date unverified')} · ${esc(c.dateBasis||'date basis unknown')} · ${esc(c.sourceIds.join(', '))}<br>${c.ranking?`PRIORITY ${esc(c.ranking.score)} · ${esc(c.ranking.repeated?'RECENT REPEAT':'NEW TO RECENT DROPS')} · ${esc(c.ranking.reasons.join(' · '))}<br>`:''}${esc(c.flags.join(', '))} · ${esc(c.reviewStatus)}<br>${c.evidence.map(e=>`<a href="${esc(e.url)}" target="_blank" rel="noopener noreferrer">SOURCE ↗</a>`).join(' · ')}<br><button type="button" data-research-id="${esc(c.id)}" data-research-decision="shortlisted" ${researchBusy?'disabled':''}>SHORTLIST</button><button type="button" data-research-id="${esc(c.id)}" data-research-decision="rejected" ${researchBusy?'disabled':''}>REJECT</button></li>`).join('')}</ul>`:''}</section>`}</details>`;
   renderPersonalTuner();
+  // Beta accounts own their own plans. Legacy shared publisher controls are
+  // retained server-side for migration, never shown in the personal Tuner.
+  if(!legacyPublisher)d.querySelector('.publisher-tools')?.remove();
+  else d.querySelectorAll('.private-plan').forEach(section=>section.remove());
   d.querySelectorAll('[data-tuner-scope],[data-tuner-reload],[data-tuner-rebase]').forEach(b=>b.disabled=busy);
 }
 async function reload(keep=false){
@@ -42,7 +48,8 @@ async function reload(keep=false){
 export async function openTuner(){
   if(busy){dialog().showModal();return;}
   scope='base';snapshot=null;drafts=null;scheduleDraft=null;dirty=false;error='';conflict=false;researchResult=null;researchError='';
-  if(!dialog().open)dialog().showModal();await reload();await refreshPublisherSession();
+  if(!dialog().open)dialog().showModal();
+  if(legacyPublisher){await reload();await refreshPublisherSession();}else render();
 }
 
 function authDialog(){

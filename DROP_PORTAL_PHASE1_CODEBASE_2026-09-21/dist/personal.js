@@ -16,7 +16,7 @@ async function readAllPersonal(exporting=false){
   let result=null,offset=0;
   for(let page=0;page<100;page++){
     const data=await request('/api/personal-data?offset='+offset+(exporting?'&export=true':''));
-    if(!result)result=data;else {if(data.state.revision!==result.state.revision)throw Error('Your preferences changed while loading. Please reload.');result.feedback.push(...data.feedback);if(exporting)result.events.push(...data.events);}
+    if(!result)result=data;else {if(data.state.revision!==result.state.revision)throw Error('Your preferences changed while loading. Please reload.');result.feedback.push(...data.feedback);if(exporting){result.events.push(...data.events);result.drops.push(...data.drops);}}
     if(data.nextOffset===null){result.nextOffset=null;return result;}offset=data.nextOffset;
   }
   throw Error('This account is too large for an in-browser export. Contact the publisher for a database export.');
