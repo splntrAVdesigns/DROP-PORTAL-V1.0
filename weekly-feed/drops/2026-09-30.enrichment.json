@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "dropId": "006",
+  "sourcePayload": "./2026-09-30.json",
+  "verifiedAt": "2026-10-01",
+  "tracks": [
+    {
+      "id": "l33-ravemadness",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=3667817386/size=small/bgcol=333333/linkcol=04d9ff/transparent=false/"
+      },
+      "evidence": {
+        "sourceUrl": "https://brainravemusic.bandcamp.com/album/obsessed-ep",
+        "artist": "L 33",
+        "title": "RAVEMADNESS",
+        "providerTrackId": "3667817386",
+        "checkedAt": "2026-10-01T16:40:55.468Z"
+      }
+    },
+    {
+      "id": "l33-obsessed",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=691542448/size=small/bgcol=333333/linkcol=04d9ff/transparent=false/"
+      },
+      "evidence": {
+        "sourceUrl": "https://brainravemusic.bandcamp.com/album/obsessed-ep",
+        "artist": "L 33",
+        "title": "Obsessed",
+        "providerTrackId": "691542448",
+        "checkedAt": "2026-10-01T16:40:55.469Z"
+      }
+    },
+    {
+      "id": "soul-central-clipz-strings-of-life-junglist-mix",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=457024535/size=small/bgcol=333333/linkcol=04d9ff/transparent=false/"
+      },
+      "evidence": {
+        "sourceUrl": "https://defected.bandcamp.com/album/strings-of-life-extended-junglist-mix",
+        "artist": "Soul Central, CLIPZ",
+        "title": "Strings Of Life (Extended Junglist Mix)",
+        "providerTrackId": "457024535",
+        "checkedAt": "2026-10-01T16:40:56.298Z"
+      }
+    },
+    {
+      "id": "ezor-banh-bao",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=2452326054/size=small/bgcol=333333/linkcol=04d9ff/transparent=false/"
+      },
+      "evidence": {
+        "sourceUrl": "https://dispatchrecordings.bandcamp.com/album/banh-bao-ep",
+        "artist": "Ezor",
+        "title": "Banh Bao",
+        "providerTrackId": "2452326054",
+        "checkedAt": "2026-10-01T16:40:56.635Z"
+      }
+    },
+    {
+      "id": "ezor-one-spliff",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=281778361/size=small/bgcol=333333/linkcol=04d9ff/transparent=false/"
+      },
+      "evidence": {
+        "sourceUrl": "https://dispatchrecordings.bandcamp.com/album/banh-bao-ep",
+        "artist": "Ezor",
+        "title": "One Spliff",
+        "providerTrackId": "281778361",
+        "checkedAt": "2026-10-01T16:40:56.636Z"
+      }
+    },
+    {
+      "id": "rift-twisted",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=2882032499/size=small/bgcol=333333/linkcol=04d9ff/transparent=false/"
+      },
+      "evidence": {
+        "sourceUrl": "https://dispatchrecordings.bandcamp.com/album/twisted-ep-2",
+        "artist": "Rift",
+        "title": "Twisted",
+        "providerTrackId": "2882032499",
+        "checkedAt": "2026-10-01T16:40:56.952Z"
+      }
+    },
+    {
+      "id": "rift-signs",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=580450137/size=small/bgcol=333333/linkcol=04d9ff/transparent=false/"
+      },
+      "evidence": {
+        "sourceUrl": "https://dispatchrecordings.bandcamp.com/album/twisted-ep-2",
+        "artist": "Rift",
+        "title": "Signs",
+        "providerTrackId": "580450137",
+        "checkedAt": "2026-10-01T16:40:56.953Z"
+      }
+    },
+    {
+      "id": "qmare-cyber-pulse",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=2531534176/size=small/bgcol=333333/linkcol=04d9ff/transparent=false/"
+      },
+      "evidence": {
+        "sourceUrl": "https://brainravemusic.bandcamp.com/album/new-dawn-lp",
+        "artist": "Qmare",
+        "title": "Cyber Pulse",
+        "providerTrackId": "2531534176",
+        "checkedAt": "2026-10-01T16:40:57.237Z"
+      }
+    },
+    {
+      "id": "qmare-evolution",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=1999658136/size=small/bgcol=333333/linkcol=04d9ff/transparent=false/"
+      },
+      "evidence": {
+        "sourceUrl": "https://brainravemusic.bandcamp.com/album/new-dawn-lp",
+        "artist": "Qmare",
+        "title": "Evolution",
+        "providerTrackId": "1999658136",
+        "checkedAt": "2026-10-01T16:40:57.237Z"
+      }
+    },
+    {
+      "id": "qmare-new-dawn",
+      "preview": {
+        "kind": "provider-embed",
+        "provider": "BANDCAMP",
+        "embedUrl": "https://bandcamp.com/EmbeddedPlayer/track=83602075/size=small/bgcol=333333/linkcol=04d9ff/transparent=false/"
+      },
+      "evidence": {
+        "sourceUrl": "https://brainravemusic.bandcamp.com/album/new-dawn-lp",
+        "artist": "Qmare",
+        "title": "New Dawn",
+        "providerTrackId": "83602075",
+        "checkedAt": "2026-10-01T16:40:57.238Z"
+      }
+    }
+  ]
+}
