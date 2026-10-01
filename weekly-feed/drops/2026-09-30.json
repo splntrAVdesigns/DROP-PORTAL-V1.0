@@ -1,0 +1,321 @@
+{
+  "schemaVersion": 1,
+  "drop": {
+    "id": "006",
+    "sequenceNumber": 6,
+    "period": "2026-09-30 · WEEKLY",
+    "ids": [
+      "section-existence",
+      "section-surface-dont-escape",
+      "l33-ravemadness",
+      "l33-obsessed",
+      "soul-central-clipz-strings-of-life-junglist-mix",
+      "ezor-banh-bao",
+      "ezor-one-spliff",
+      "rift-twisted",
+      "rift-signs",
+      "qmare-cyber-pulse",
+      "qmare-evolution",
+      "qmare-new-dawn"
+    ],
+    "publishedAt": "2026-10-01T12:45:32.000Z"
+  },
+  "profileSnapshot": {
+    "source": "baseProfile",
+    "targetDropDate": "2026-09-30",
+    "future": 35,
+    "deep": 40,
+    "jungle": 25,
+    "depth": 80,
+    "experimental": 65,
+    "floor": 60,
+    "darkness": 75,
+    "breaks": 70,
+    "count": 12,
+    "mixes": true
+  },
+  "scheduleSnapshot": {
+    "nextDropAt": "2026-10-01T00:00:00.000Z",
+    "timezone": "America/Chicago",
+    "defaultSchedule": {
+      "weekday": "WEDNESDAY",
+      "time": "19:00"
+    },
+    "override": null
+  },
+  "tracks": [
+    {
+      "id": "section-existence",
+      "artistName": "Section",
+      "title": "Existence",
+      "reason": "A fierce amen workout with sharp stabs and raw late-90s pressure, verified directly from Dispatch's release notes.",
+      "subgenre": "Jungle / Amen Drum & Bass",
+      "release": "Dispatch Blueprints 029",
+      "label": "Dispatch Recordings",
+      "releaseDate": "2026-09-25",
+      "lane": 2,
+      "score": 94,
+      "confidence": 98,
+      "preview": null,
+      "links": [
+        {
+          "kind": "store-listening",
+          "url": "https://dispatchrecordings.bandcamp.com/album/dispatch-blueprints-029"
+        }
+      ],
+      "startHere": true,
+      "priority": 1
+    },
+    {
+      "id": "section-surface-dont-escape",
+      "artistName": "Section & Surface",
+      "title": "Don't Escape",
+      "reason": "Dispatch describes this as an eerie, tension-filled roller and a choppage showcase, squarely matching the dark deep lane.",
+      "subgenre": "Deep / Tech Drum & Bass",
+      "release": "Dispatch Blueprints 029",
+      "label": "Dispatch Recordings",
+      "releaseDate": "2026-09-25",
+      "lane": 1,
+      "score": 93,
+      "confidence": 98,
+      "preview": null,
+      "links": [
+        {
+          "kind": "store-listening",
+          "url": "https://dispatchrecordings.bandcamp.com/album/dispatch-blueprints-029"
+        }
+      ],
+      "startHere": true,
+      "priority": 2
+    },
+    {
+      "id": "l33-ravemadness",
+      "artistName": "L 33",
+      "title": "RAVEMADNESS",
+      "reason": "A verified new BrainRave cut selected from an EP officially tagged dark, heavy, neurofunk and tech drum and bass.",
+      "subgenre": "Future / Neurofunk Drum & Bass",
+      "release": "Obsessed EP",
+      "label": "BrainRave Music",
+      "releaseDate": "2026-09-24",
+      "lane": 0,
+      "score": 91,
+      "confidence": 91,
+      "preview": null,
+      "links": [
+        {
+          "kind": "store-listening",
+          "url": "https://brainravemusic.bandcamp.com/album/obsessed-ep"
+        }
+      ],
+      "startHere": true,
+      "priority": 3
+    },
+    {
+      "id": "l33-obsessed",
+      "artistName": "L 33",
+      "title": "Obsessed",
+      "reason": "The title cut anchors the EP's verified dark, heavy and tech-focused palette with a direct floor-facing choice.",
+      "subgenre": "Deep / Neurofunk Drum & Bass",
+      "release": "Obsessed EP",
+      "label": "BrainRave Music",
+      "releaseDate": "2026-09-24",
+      "lane": 1,
+      "score": 90,
+      "confidence": 91,
+      "preview": null,
+      "links": [
+        {
+          "kind": "store-listening",
+          "url": "https://brainravemusic.bandcamp.com/album/obsessed-ep"
+        }
+      ],
+      "startHere": false,
+      "priority": 4
+    },
+    {
+      "id": "soul-central-clipz-strings-of-life-junglist-mix",
+      "artistName": "Soul Central, CLIPZ",
+      "title": "Strings Of Life (Extended Junglist Mix)",
+      "reason": "An explicitly junglist extended mix with official jungle and drum-and-bass tagging, bringing a bright but break-led counterpoint.",
+      "subgenre": "Jungle / Drum & Bass",
+      "release": "Strings Of Life (Extended Junglist Mix)",
+      "label": "Defected",
+      "releaseDate": "2026-09-25",
+      "lane": 2,
+      "score": 89,
+      "confidence": 97,
+      "preview": null,
+      "links": [
+        {
+          "kind": "store-listening",
+          "url": "https://defected.bandcamp.com/album/strings-of-life-extended-junglist-mix"
+        }
+      ],
+      "startHere": false,
+      "priority": 5
+    },
+    {
+      "id": "ezor-banh-bao",
+      "artistName": "Ezor",
+      "title": "Banh Bao",
+      "reason": "The title cut comes from Dispatch's stripped-back, rolling set of crisp percussion, cavernous bass and hypnotic textures.",
+      "subgenre": "Deep / Minimal Drum & Bass",
+      "release": "Banh Bao EP",
+      "label": "Dispatch Recordings",
+      "releaseDate": "2026-09-11",
+      "lane": 1,
+      "score": 89,
+      "confidence": 94,
+      "preview": null,
+      "links": [
+        {
+          "kind": "store-listening",
+          "url": "https://dispatchrecordings.bandcamp.com/album/banh-bao-ep"
+        }
+      ],
+      "startHere": false,
+      "priority": 6
+    },
+    {
+      "id": "ezor-one-spliff",
+      "artistName": "Ezor",
+      "title": "One Spliff",
+      "reason": "A verified EP cut chosen from Dispatch's rolling, percussion-led palette to keep the jungle lane stripped and underground.",
+      "subgenre": "Jungle / Minimal Drum & Bass",
+      "release": "Banh Bao EP",
+      "label": "Dispatch Recordings",
+      "releaseDate": "2026-09-11",
+      "lane": 2,
+      "score": 87,
+      "confidence": 90,
+      "preview": null,
+      "links": [
+        {
+          "kind": "store-listening",
+          "url": "https://dispatchrecordings.bandcamp.com/album/banh-bao-ep"
+        }
+      ],
+      "startHere": false,
+      "priority": 7
+    },
+    {
+      "id": "rift-twisted",
+      "artistName": "Rift",
+      "title": "Twisted",
+      "reason": "The title track represents Dispatch's documented driving, rolling and funk-fuelled EP approach without leaving the deep lane.",
+      "subgenre": "Deep / Rolling Drum & Bass",
+      "release": "Twisted EP",
+      "label": "Dispatch Recordings",
+      "releaseDate": "2026-09-18",
+      "lane": 1,
+      "score": 88,
+      "confidence": 93,
+      "preview": null,
+      "links": [
+        {
+          "kind": "store-listening",
+          "url": "https://dispatchrecordings.bandcamp.com/album/twisted-ep-2"
+        }
+      ],
+      "startHere": false,
+      "priority": 8
+    },
+    {
+      "id": "rift-signs",
+      "artistName": "Rift",
+      "title": "Signs",
+      "reason": "A verified cut from a forward-moving Dispatch EP whose raw groove and heavyweight rolling drums add future-facing momentum.",
+      "subgenre": "Future / Rolling Drum & Bass",
+      "release": "Twisted EP",
+      "label": "Dispatch Recordings",
+      "releaseDate": "2026-09-18",
+      "lane": 0,
+      "score": 86,
+      "confidence": 88,
+      "preview": null,
+      "links": [
+        {
+          "kind": "store-listening",
+          "url": "https://dispatchrecordings.bandcamp.com/album/twisted-ep-2"
+        }
+      ],
+      "startHere": false,
+      "priority": 9
+    },
+    {
+      "id": "qmare-cyber-pulse",
+      "artistName": "Qmare",
+      "title": "Cyber Pulse",
+      "reason": "A verified album cut from BrainRave's new heavy, neurofunk and techstep-tagged LP, selected for the experimental future lane.",
+      "subgenre": "Future / Techstep Drum & Bass",
+      "release": "New Dawn LP",
+      "label": "BrainRave Music",
+      "releaseDate": "2026-09-10",
+      "lane": 0,
+      "score": 86,
+      "confidence": 89,
+      "preview": null,
+      "links": [
+        {
+          "kind": "store-listening",
+          "url": "https://brainravemusic.bandcamp.com/album/new-dawn-lp"
+        }
+      ],
+      "startHere": false,
+      "priority": 10
+    },
+    {
+      "id": "qmare-evolution",
+      "artistName": "Qmare",
+      "title": "Evolution",
+      "reason": "Its placement on BrainRave's verified neurofunk and techstep LP makes it a suitable high-energy future-lane selection.",
+      "subgenre": "Future / Neurofunk Drum & Bass",
+      "release": "New Dawn LP",
+      "label": "BrainRave Music",
+      "releaseDate": "2026-09-10",
+      "lane": 0,
+      "score": 85,
+      "confidence": 87,
+      "preview": null,
+      "links": [
+        {
+          "kind": "store-listening",
+          "url": "https://brainravemusic.bandcamp.com/album/new-dawn-lp"
+        }
+      ],
+      "startHere": false,
+      "priority": 11
+    },
+    {
+      "id": "qmare-new-dawn",
+      "artistName": "Qmare",
+      "title": "New Dawn",
+      "reason": "The title track closes the set with a verified heavy and tech-driven LP selection while preserving the requested dark depth.",
+      "subgenre": "Deep / Techstep Drum & Bass",
+      "release": "New Dawn LP",
+      "label": "BrainRave Music",
+      "releaseDate": "2026-09-10",
+      "lane": 1,
+      "score": 87,
+      "confidence": 90,
+      "preview": null,
+      "links": [
+        {
+          "kind": "store-listening",
+          "url": "https://brainravemusic.bandcamp.com/album/new-dawn-lp"
+        }
+      ],
+      "startHere": false,
+      "priority": 12
+    }
+  ],
+  "mixes": [],
+  "sources": [
+    "https://dispatchrecordings.bandcamp.com/album/dispatch-blueprints-029",
+    "https://brainravemusic.bandcamp.com/album/obsessed-ep",
+    "https://defected.bandcamp.com/album/strings-of-life-extended-junglist-mix",
+    "https://dispatchrecordings.bandcamp.com/album/twisted-ep-2",
+    "https://dispatchrecordings.bandcamp.com/album/banh-bao-ep",
+    "https://brainravemusic.bandcamp.com/album/new-dawn-lp"
+  ]
+}
