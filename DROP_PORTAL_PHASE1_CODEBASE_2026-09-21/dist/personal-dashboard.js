@@ -1,9 +1,28 @@
 import {personal,sendCode,verifyCode,setPersonalFeedback,signOut,personalInteractions} from './personal.js';
 import {privateDrops,loadPrivateDrops} from './personal-drops-client.js';
 import {formatReleaseDate} from './destinations.js';
+import {heroMarkup,initHero,stopHero} from './hero.js';
+import {read,write} from './storage.js';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let email='',codeSent=false,busy=false,message='',initialized=false;
 let enabled=false,availability='ready';
+let editing=false,layoutOwner=null,heroCanvas=null;
+const defaultLayout={order:['queue','results'],sizes:{queue:'wide',results:'wide'}};
+function personalLayout(){
+  const id=personal.user?.id;
+  if(layoutOwner!==id){layoutOwner=id;editing=false;}
+  if(!id)return defaultLayout;
+  const saved=read('private-layout:'+id,null);
+  const order=Array.isArray(saved?.order)&&saved.order.length===2&&new Set(saved.order).size===2&&saved.order.every(k=>['queue','results'].includes(k))?saved.order:defaultLayout.order;
+  return {order,sizes:Object.fromEntries(['queue','results'].map(k=>[k,saved?.sizes?.[k]==='compact'?'compact':'wide']))};
+}
+function changeLayout(kind,value){
+  const current=personalLayout(),next={order:[...current.order],sizes:{...current.sizes}};
+  if(kind==='order')next.order.reverse();
+  if(kind==='size'&&['queue','results'].includes(value))next.sizes[value]=next.sizes[value]==='wide'?'compact':'wide';
+  write('private-layout:'+personal.user.id,next);renderPrivateDashboard();
+}
+function panelControls(key){return editing?`<div class="private-panel-controls"><span>${key==='queue'?'UPCOMING':'MY DROP'}</span><button data-private-layout="order" aria-label="Swap panel order">Move ${key==='queue'?'after results':'before upcoming'}</button><button data-private-layout="size" data-layout-panel="${key}">Toggle width</button></div>`:'';}
 export function setPrivateAvailability(value){availability=value;}
 export function enablePrivateDashboard(){enabled=true;if(personal.user)loadPrivateDrops();}
 const dateLabel=v=>v?new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'}).format(new Date(v)):'Not scheduled';
@@ -29,38 +48,49 @@ function paintDashboard(app,markup,feedback){
   const owner=personal.user?.id||'';
   const temp=document.createElement('div');temp.innerHTML=markup;
   const oldResults=app.querySelector('.personal-results'),newResults=temp.querySelector('.personal-results');
-  const signature=node=>{if(!node)return '';const copy=node.cloneNode(true);copy.querySelectorAll('[data-personal-track]').forEach(b=>{b.textContent='';b.removeAttribute('aria-pressed');});return copy.innerHTML;};
+  const oldHero=app.querySelector('.ascii-hero'),newHero=temp.querySelector('.ascii-hero');
+  const signature=node=>{if(!node)return '';const copy=node.cloneNode(true);copy.querySelectorAll('[data-personal-track]').forEach(b=>{b.textContent='';b.removeAttribute('aria-pressed');});copy.querySelectorAll('.private-panel-controls').forEach(n=>n.remove());return copy.innerHTML;};
   if(app.dataset.owner===owner&&oldResults&&newResults&&signature(oldResults)===signature(newResults)){
     // Keep the live media subtree attached. Update surrounding status and feedback only.
-    for(const child of [...app.children])if(child!==oldResults)child.remove();
-    for(const child of [...temp.children]){if(child===newResults)continue;app.insertBefore(child,oldResults);}
+    for(const child of [...app.children])if(child!==oldResults&&child!==oldHero)child.remove();
+    if(oldHero&&!newHero)oldHero.remove();
+    for(const child of [...temp.children]){if(child===newResults||child===newHero&&oldHero)continue;app.insertBefore(child,oldResults);}
+    oldResults.className=newResults.className;oldResults.style.cssText=newResults.style.cssText;
+    oldResults.querySelector('.private-panel-controls')?.remove();
+    const controls=newResults.querySelector('.private-panel-controls');if(controls)oldResults.insertBefore(controls,oldResults.firstChild);
     oldResults.querySelectorAll('[data-personal-track]').forEach(b=>{
       const kind=b.dataset.personalKind,on=!!feedback[b.dataset.personalTrack]?.[kind];
       b.setAttribute('aria-pressed',String(on));b.textContent=kind==='saved'?(on?'Saved ✓':'Save'):(on?'Heard ✓':'Mark heard');
     });
   }else app.innerHTML=markup;
   app.dataset.owner=owner;
+  const canvas=app.querySelector('#ascii-hero-canvas');
+  if(canvas!==heroCanvas){stopHero();heroCanvas=canvas;if(canvas&&typeof canvas.getContext==='function'&&typeof IntersectionObserver!=='undefined'&&typeof ResizeObserver!=='undefined')initHero();}
 }
 export function renderPrivateDashboard(){
   const app=document.querySelector('#app');if(!app)return;
+  const layout=personalLayout();
   const nav=document.querySelector('header nav');if(nav)nav.hidden=!personal.user;
   const tuner=document.querySelector('#tuner');if(tuner)tuner.hidden=!personal.user;
-  const editor=document.querySelector('#edit');if(editor)editor.hidden=true;
+  const path=location.pathname.replace(/\/$/,'')||'/';
+  app.classList.toggle('private-home',path==='/'&&!!personal.user&&privateDrops.owner===personal.user.id&&availability==='ready');
+  const editor=document.querySelector('#edit');if(editor){editor.hidden=!personal.user||path!=='/'||availability!=='ready';editor.textContent=editing?'✓ DONE':'⊞ EDIT LAYOUT';editor.setAttribute('aria-expanded',String(editing));}
   const palette=document.querySelector('#palette-controls');if(palette)palette.hidden=true;
   if(availability!=='ready'){
+    stopHero();heroCanvas=null;
     if(nav)nav.hidden=true;if(tuner)tuner.hidden=true;
     app.innerHTML=`<section class="auth-page"><div class="auth-card"><span class="eyebrow">DROP:PORTAL</span><h1>${availability==='checking'?'Connecting your portal…':availability==='setup_required'?'Your portal is being prepared.':'Connection unavailable.'}</h1><p>${availability==='checking'?'Checking availability.':'Please retry shortly. Your saved preferences remain private.'}</p>${availability==='checking'?'':'<button data-private-retry>RETRY</button>'}</div></section>`;return;
   }
-  const path=location.pathname.replace(/\/$/,'')||'/';
-  if(!personal.checked){app.innerHTML='<section class="auth-page"><div class="auth-card"><span class="eyebrow">PRIVATE BETA</span><h1>Connecting your portal…</h1></div></section>';return;}
+  if(!personal.checked){stopHero();heroCanvas=null;app.innerHTML='<section class="auth-page"><div class="auth-card"><span class="eyebrow">PRIVATE BETA</span><h1>Connecting your portal…</h1></div></section>';return;}
   if(!personal.user){
+    stopHero();heroCanvas=null;
     app.innerHTML=`<section class="auth-page"><div class="auth-card"><span class="eyebrow">DROP:PORTAL / PRIVATE BETA</span><h1>Your next dig starts here.</h1><p>Sign in to open your personal Drum & Bass dashboard.</p>
     <form id="portal-login"><label for="portal-email">EMAIL ADDRESS</label><input id="portal-email" type="email" autocomplete="email" value="${esc(email)}" required>
     ${codeSent?'<label for="portal-code">SIGN-IN CODE</label><input id="portal-code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,8}" required>':''}
     <button class="primary" type="submit" ${busy?'disabled':''}>${busy?'PLEASE WAIT…':codeSent?'VERIFY CODE':'SEND SIGN-IN CODE'}</button></form>
     ${codeSent?'<button data-login-reset>Use another email / resend</button>':''}${message?`<p role="status">${esc(message)}</p>`:''}</div></section>`;return;
   }
-  if(privateDrops.owner!==personal.user.id){app.innerHTML='<section class="auth-page"><p>Loading your private drops…</p></section>';return;}
+  if(privateDrops.owner!==personal.user.id){stopHero();heroCanvas=null;app.innerHTML='<section class="auth-page"><p>Loading your private drops…</p></section>';return;}
   const current=privateDrops.drops.find(d=>d.status==='ready')||null;
   const feedback=personalInteractions();
   const savedCount=document.querySelector('#saved-count');if(savedCount)savedCount.textContent=Object.values(feedback).filter(v=>v.saved).length;
@@ -82,8 +112,8 @@ export function renderPrivateDashboard(){
   const requested=location.hash.match(/^#drop=([0-9a-f-]{36})$/)?.[1];
   const drop=(requested&&history.find(d=>d.id===requested&&d.status==='ready'))||current;
   const pending=history.filter(d=>d.status!=='ready');
-  paintDashboard(app,headline+`<section class="private-queue"><h2>Upcoming & research status</h2>${pending.length?pending.map(d=>`<p><b>${d.kind==='one_time'?'ONE TIME DIG':'WEEKLY DIG'}</b> · ${esc(dateLabel(d.scheduled_at))} · ${esc(d.status.replaceAll('_',' '))}${d.status_detail?' · '+esc(d.status_detail):''}</p>`).join(''):'<p>No one-time digs queued.</p>'}</section>
-  <section class="personal-results"><span class="eyebrow">${drop?'VERIFIED CATALOG SELECTION':'WAITING FOR YOUR FIRST DROP'}</span><h2>${drop?.kind==='one_time'?'One Time Dig':'My weekly drop'}</h2>
+  paintDashboard(app,heroMarkup()+headline+`<section class="private-queue ${layout.sizes.queue}" style="order:${layout.order.indexOf('queue')+2}">${panelControls('queue')}<h2>Upcoming & research status</h2>${pending.length?pending.map(d=>`<p><b>${d.kind==='one_time'?'ONE TIME DIG':'WEEKLY DIG'}</b> · ${esc(dateLabel(d.scheduled_at))} · ${esc(d.status.replaceAll('_',' '))}${d.status_detail?' · '+esc(d.status_detail):''}</p>`).join(''):'<p>No one-time digs queued.</p>'}</section>
+  <section class="personal-results ${layout.sizes.results}" style="order:${layout.order.indexOf('results')+2}">${panelControls('results')}<span class="eyebrow">${drop?'VERIFIED CATALOG SELECTION':'WAITING FOR YOUR FIRST DROP'}</span><h2>${drop?.kind==='one_time'?'One Time Dig':'My weekly drop'}</h2>
   ${drop?`<p>${esc(drop.result.note)}</p><h3>Start here · Top 3</h3><p>${drop.result.tracks.slice(0,3).map(t=>esc(t.artistName)+' — '+esc(t.title)).join(' · ')}</p><div class="personal-tracks">${drop.result.tracks.map(t=>track(t,feedback)).join('')}</div>`:'<p>Save a personal weekly plan or queue a One Time Dig in the Tuner. Results are visible only to your account.</p>'}</section>`,feedback);
 }
 export function setupPrivateDashboard(){
@@ -98,6 +128,8 @@ export function setupPrivateDashboard(){
   });
   document.addEventListener('click',async e=>{
     const b=e.target.closest('button');if(!b)return;if(b.hasAttribute('data-private-retry')){location.reload();return;}if(!enabled)return;
+    if(b.id==='edit'&&personal.user){editing=!editing;renderPrivateDashboard();return;}
+    if(b.dataset.privateLayout&&personal.user&&editing){changeLayout(b.dataset.privateLayout,b.dataset.layoutPanel);return;}
     if(b.hasAttribute('data-login-reset')){codeSent=false;message='';renderPrivateDashboard();}
     if(b.hasAttribute('data-open-personal-tuner'))document.querySelector('#tuner').click();
     if(b.hasAttribute('data-private-signout')){await signOut();}

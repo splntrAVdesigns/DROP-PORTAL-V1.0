@@ -41,6 +41,20 @@ test('private curator uses release evidence and taste, and never fills a shortag
   assert.equal(curatePersonalDrop([{tracks}],{...profile,focus:{...profile.focus,labelSpecific:true},labels:['Other']},[],new Date('2026-10-01T23:00:00Z')).status,'needs_research');
 });
 
+test('personal depth and experimental bias change the verified catalog order',()=>{
+  const tracks=Array.from({length:10},(_,i)=>({id:'choice-'+i,artistName:'Artist '+i,title:'Release '+i,
+    label:'Label',releaseDate:i===0?'2026-09-03':'2026-09-30',lane:i===1?0:1,score:80,
+    links:[{kind:'listen',url:'https://example.com/'+i}]}));
+  const at=new Date('2026-10-01T23:00:00Z');
+  const p={...PERSONAL_DEFAULTS,count:10,future:50,deep:50,jungle:50,depth:0,experimental:50};
+  const recent=curatePersonalDrop([{tracks}],p,[],at).result.tracks.map(t=>t.id);
+  const older=curatePersonalDrop([{tracks}],{...p,depth:100},[],at).result.tracks.map(t=>t.id);
+  assert.ok(recent.indexOf('choice-0')>older.indexOf('choice-0'));
+  const low=curatePersonalDrop([{tracks}],{...p,experimental:0},[],at).result.tracks.map(t=>t.id);
+  const high=curatePersonalDrop([{tracks}],{...p,experimental:100},[],at).result.tracks.map(t=>t.id);
+  assert.ok(low.indexOf('choice-1')>high.indexOf('choice-1'));
+});
+
 test('migration 003 isolates plans and drops for two accounts and deletes only the owner data',async()=>{
   const db=new PGlite();
   try{
@@ -106,18 +120,30 @@ test('one-time replacements cancel the previous account job while retaining read
 test('private dashboard gates the board and shows only the signed-in account drops',async()=>{
   const {window}=parseHTML('<html><body><header><nav></nav><div class="utilities"><button id="tuner"></button><button id="edit"></button><div id="palette-controls"></div></div></header><span id="saved-count"></span><main id="app"></main></body></html>');
   globalThis.window=window;globalThis.document=window.document;globalThis.location={pathname:'/',hash:''};
+  const savedInterval=globalThis.setInterval,savedStorage=globalThis.localStorage;
+  const values=new Map();globalThis.localStorage={getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,v)};
+  globalThis.setInterval=()=>0;
   try{
     const {personal}=await import('../DROP_PORTAL_PHASE1_CODEBASE_2026-09-21/dist/personal.js');
     const {privateDrops}=await import('../DROP_PORTAL_PHASE1_CODEBASE_2026-09-21/dist/personal-drops-client.js');
-    const {renderPrivateDashboard}=await import('../DROP_PORTAL_PHASE1_CODEBASE_2026-09-21/dist/personal-dashboard.js');
+    const {renderPrivateDashboard,setupPrivateDashboard,enablePrivateDashboard}=await import('../DROP_PORTAL_PHASE1_CODEBASE_2026-09-21/dist/personal-dashboard.js');
+    setupPrivateDashboard();
     personal.checked=true;personal.user=null;renderPrivateDashboard();
+    enablePrivateDashboard();
     assert.match(window.document.querySelector('#app').textContent,/SEND SIGN-IN CODE/);
     assert.doesNotMatch(window.document.querySelector('#app').textContent,/Public weekly drop/);
     personal.user={id:a,email:'a@example.com'};privateDrops.owner=a;privateDrops.plan=null;privateDrops.drops=[];renderPrivateDashboard();
     assert.match(window.document.querySelector('#app').textContent,/Set your taste and weekly time/);
+    assert.ok(window.document.querySelector('#ascii-hero-canvas'));
+    assert.equal(window.document.querySelector('#edit').hidden,false);
     privateDrops.drops=[{id:'11111111-1111-4111-8111-111111111112',kind:'one_time',status:'ready',result:{note:'Verified catalog',tracks:[{id:'t1',artistName:'A',title:'Private A',personalRank:1,links:[],releaseDate:'2026-09-30',reason:'A',lane:0,preview:{kind:'provider-embed',embedUrl:'https://bandcamp.com/EmbeddedPlayer/track=123/'}}]}}];
     renderPrivateDashboard();assert.match(window.document.querySelector('#app').textContent,/Private A/);
     const frame=window.document.querySelector('iframe');assert.ok(frame);
+    window.document.querySelector('#edit').click();
+    assert.equal(window.document.querySelector('#edit').getAttribute('aria-expanded'),'true');
+    window.document.querySelector('[data-layout-panel="queue"]').click();
+    assert.equal(window.document.querySelector('.private-queue').classList.contains('compact'),true);
+    assert.equal(window.document.querySelector('iframe'),frame,'layout edits should keep the player attached');
     privateDrops.loading=true;renderPrivateDashboard();assert.equal(window.document.querySelector('iframe'),frame);
     personal.feedback={'t1:saved':{track_id:'t1',kind:'saved',value:true,updated_at:new Date().toISOString()}};
     renderPrivateDashboard();assert.equal(window.document.querySelector('iframe'),frame);
@@ -130,10 +156,13 @@ test('private dashboard gates the board and shows only the signed-in account dro
     assert.doesNotMatch(window.document.querySelector('#app .private-queue').textContent,/9:00 PM/);
     personal.user={id:b,email:'b@example.com'};privateDrops.owner=b;privateDrops.drops=[];renderPrivateDashboard();
     assert.doesNotMatch(window.document.querySelector('#app').textContent,/Private A/);
+    assert.equal(window.document.querySelector('.private-queue').classList.contains('wide'),true,'account B starts with its own layout');
+    personal.user={id:a,email:'a@example.com'};privateDrops.owner=a;renderPrivateDashboard();
+    assert.equal(window.document.querySelector('.private-queue').classList.contains('compact'),true,'account A retains its layout');
     const {setPrivateAvailability}=await import('../DROP_PORTAL_PHASE1_CODEBASE_2026-09-21/dist/personal-dashboard.js');
     setPrivateAvailability('setup_required');renderPrivateDashboard();
     assert.match(window.document.querySelector('#app').textContent,/portal is being prepared/);
     assert.equal(window.document.querySelector('#tuner').hidden,true);
     setPrivateAvailability('ready');
-  }finally{delete globalThis.window;delete globalThis.document;delete globalThis.location;}
+  }finally{globalThis.setInterval=savedInterval;if(savedStorage===undefined)delete globalThis.localStorage;else globalThis.localStorage=savedStorage;delete globalThis.window;delete globalThis.document;delete globalThis.location;}
 });

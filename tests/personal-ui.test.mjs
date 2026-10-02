@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {parseHTML} from 'linkedom';
 
-test('compact Tuner saves private artist/label focus, protects unsaved tabs and resets after account change',async()=>{
+test('personal Tuner restores all preferences, protects unsaved tabs and resets after account change',async()=>{
   const {window,document}=parseHTML('<html><body><dialog id="tuner-dialog" open><div id="personal-tuner"></div></dialog></body></html>');
   Object.defineProperty(window.HTMLInputElement.prototype,'checked',{get(){return this.hasAttribute('checked');},set(v){this.toggleAttribute('checked',!!v);},configurable:true});
   globalThis.window=window;globalThis.document=document;
@@ -24,6 +24,7 @@ test('compact Tuner saves private artist/label focus, protects unsaved tabs and 
     document.querySelector('#taste-labels').value='Metalheadz';document.querySelector('[data-add-name=labels]').click();
     document.querySelector('#taste-artists').value='Photek';document.querySelector('[data-add-name=artists]').click();
     document.querySelector('[data-focus=labels]').click();document.querySelector('[data-focus=groove]').click();
+    document.querySelector('#personal-depth').value='91';document.querySelector('#personal-experimental').value='82';
     document.querySelector('[data-personal-scope=weekly]').click();
     assert.match(document.querySelector('#personal-tuner').textContent,/Save or reload your edits/);
     document.querySelector('[data-personal=save]').click();
@@ -32,12 +33,17 @@ test('compact Tuner saves private artist/label focus, protects unsaved tabs and 
     assert.equal(requests[0].headers['X-Personal-Account'],'user-a');
     assert.equal(requests[0].scope,'base');assert.deepEqual(requests[0].profile.labels,['Metalheadz']);
     assert.equal(requests[0].profile.focus.labelSpecific,true);assert.deepEqual(requests[0].profile.focus.flags,['groove']);
+    assert.equal(requests[0].profile.depth,91);assert.equal(requests[0].profile.experimental,82);
     assert.equal(requests[0].expectedRevision,0);
     Object.assign(personal,{user:{id:'user-b',email:'b@example.com'},state:{base_profile:structuredClone(PERSONAL_DEFAULTS),weekly_profile:null,revision:0}});
     renderPersonalTuner();assert.equal(document.querySelector('.taste-chips').textContent.includes('Photek'),false);
     enablePrivatePlanUI();renderPersonalTuner();
     assert.equal(document.querySelector('[data-focus=groove]').disabled,true);
-    assert.equal(document.querySelector('#personal-depth'),null);
+    assert.ok(document.querySelector('#personal-depth'));
+    assert.equal(document.querySelectorAll('[data-personal-range]').length,9);
+    const headings=[...document.querySelectorAll('#personal-tuner h3')].map(n=>n.textContent);
+    assert.deepEqual(headings.slice(0,5),['MY TASTE','MY WEEKLY DROP','ONE TIME DIG','DISCOVERY FOCUS','PREFERRED ARTISTS & LABELS']);
+    assert.equal(document.querySelectorAll('.focus-strip').length,2);
     document.querySelector('[data-personal-scope=weekly]').click();
     document.querySelector('[data-personal=save]').click();await new Promise(resolve=>setImmediate(resolve));
     assert.match(document.querySelector('#personal-tuner').textContent,/Save a weekly plan first/);
