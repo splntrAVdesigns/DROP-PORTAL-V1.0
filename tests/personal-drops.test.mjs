@@ -135,11 +135,11 @@ test('private dashboard gates the board and shows only the signed-in account dro
     personal.user={id:a,email:'a@example.com'};privateDrops.owner=a;privateDrops.plan=null;privateDrops.drops=[];renderPrivateDashboard();
     assert.match(window.document.querySelector('#app').textContent,/Set your taste and weekly time/);
     assert.ok(window.document.querySelector('#ascii-hero-canvas'));
-    assert.match(window.document.querySelector('.ascii-hero-chrome').textContent,/DROP \/ —/);
+    assert.match(window.document.querySelector('.ascii-hero-chrome').textContent,/LIVE DROP SESSION -- —/);
     assert.equal(window.document.querySelector('#edit').hidden,false);
     privateDrops.drops=[{id:'11111111-1111-4111-8111-111111111112',kind:'one_time',status:'ready',result:{note:'Verified catalog',tracks:[{id:'t1',artistName:'A',title:'Private A',personalRank:1,links:[],releaseDate:'2026-09-30',reason:'A',lane:0,preview:{kind:'provider-embed',embedUrl:'https://bandcamp.com/EmbeddedPlayer/track=123/'}}]}},{id:'11111111-1111-4111-8111-111111111115',kind:'weekly',status:'ready',weekly_sequence:2,result:{note:'Weekly catalog',tracks:[]}}];
     renderPrivateDashboard();assert.match(window.document.querySelector('#app').textContent,/Private A/);
-    assert.match(window.document.querySelector('.ascii-hero-chrome').textContent,/DROP \/ 002/,'latest weekly number remains visible during a One Time Dig');
+    assert.match(window.document.querySelector('.ascii-hero-chrome').textContent,/LIVE DROP SESSION -- 002/,'latest weekly number remains visible during a One Time Dig');
     assert.ok(window.document.querySelector('[data-personal-preview]'));
     const {playPersonalPreview}=await import('../DROP_PORTAL_PHASE1_CODEBASE_2026-09-21/dist/personal-listening.js');
     await playPersonalPreview('t1');
