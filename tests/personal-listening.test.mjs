@@ -15,6 +15,13 @@ test('one listening owner survives refreshes, swaps providers and stops on accou
   setupPersonalListening();const tracks=[{id:'a',artistName:'A',title:'A',preview:{kind:'provider-embed',provider:'BANDCAMP',embedUrl:'https://bandcamp.com/EmbeddedPlayer/track=1/'}},{id:'b',artistName:'B',title:'B',preview:{kind:'provider-embed',provider:'SOUNDCLOUD',embedUrl:'https://w.soundcloud.com/player/?url=https%3A%2F%2Fsoundcloud.com%2Fb%2Fc'}},{id:'evil',preview:{kind:'provider-embed',embedUrl:'https://evil.example/player/'}}];
   syncPersonalListening('A',tracks);await playPersonalPreview('a');const frame=document.querySelector('iframe');
   assert.equal(document.querySelectorAll('iframe').length,1);assert.equal(document.querySelector('[data-listening-toggle]').disabled,true);
+  assert.equal(document.querySelector('.personal-listening-wave').querySelectorAll('rect').length,80);
+  const {paletteMarkup}=await import('../DROP_PORTAL_PHASE1_CODEBASE_2026-09-21/dist/hero.js');
+  const palettes=document.createElement('div');palettes.innerHTML=paletteMarkup();document.body.append(palettes);
+  document.querySelector('[data-hero-palette="teal-coral"]').click();
+  assert.equal(document.querySelector('#personal-listening-dock').style.getPropertyValue('--listening-color-a'),'#00F5C4');
+  assert.equal(document.querySelector('iframe'),frame,'palette changes retain the provider iframe');
+  assert.ok(document.querySelector('.personal-listening-head .personal-listening-note'));
   syncPersonalListening('A',structuredClone(tracks));assert.equal(document.querySelector('iframe'),frame);
   await playPersonalPreview('a');assert.equal(document.querySelector('iframe'),frame);
   document.querySelector('[data-listening-minimize]').click();assert.equal(document.querySelector('#personal-listening-dock').hidden,true);

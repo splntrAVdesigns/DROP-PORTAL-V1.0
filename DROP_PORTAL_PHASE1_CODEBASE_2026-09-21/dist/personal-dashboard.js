@@ -3,7 +3,7 @@ import {privateDrops,loadPrivateDrops,retryPrivateDrop} from './personal-drops-c
 import {syncPersonalListening,setupPersonalListening,updatePersonalListening} from './personal-listening.js';
 import {personalSignal,signalLanes} from './personal-signal.js';
 import {formatReleaseDate,directPreview,embedPreview,primaryListen,primaryBuy} from './destinations.js';
-import {heroMarkup,initHero,stopHero} from './hero.js';
+import {heroMarkup,initHero,stopHero,paletteMarkup} from './hero.js';
 import {read,write} from './storage.js';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let email='',codeSent=false,busy=false,message='',initialized=false;
@@ -81,7 +81,7 @@ export function renderPrivateDashboard(){
   const path=location.pathname.replace(/\/$/,'')||'/';
   app.classList.toggle('private-home',path==='/'&&!!personal.user&&privateDrops.owner===personal.user.id&&availability==='ready');
   const editor=document.querySelector('#edit');if(editor){editor.hidden=!personal.user||path!=='/'||availability!=='ready';editor.textContent=editing?'✓ DONE':'⊞ EDIT LAYOUT';editor.setAttribute('aria-expanded',String(editing));}
-  const palette=document.querySelector('#palette-controls');if(palette)palette.hidden=true;
+  const palette=document.querySelector('#palette-controls');if(palette){palette.hidden=!(editing&&personal.user&&availability==='ready');palette.innerHTML=palette.hidden?'':paletteMarkup();}
   if(availability!=='ready'){
     stopHero();heroCanvas=null;
     if(nav)nav.hidden=true;if(tuner)tuner.hidden=true;
@@ -119,7 +119,7 @@ export function renderPrivateDashboard(){
   const drop=(requested&&history.find(d=>d.id===requested&&d.status==='ready'))||current;
   const signal=personalSignal(drop);
   const pending=history.filter(d=>d.status!=='ready');
-  paintDashboard(app,heroMarkup()+headline.replace('class="personal-hero"',`class="personal-hero" style="order:${layout.order.indexOf('queue')+2}"`).replace('</div>',signalMarkup(signal)+'</div>')+`<section class="private-queue ${layout.sizes.queue}" style="order:${layout.order.indexOf('queue')+2}">${panelControls('queue')}<h2>${icon("schedule")} Upcoming & research status</h2><p class="private-heartbeat">Last successful worker check · ${esc(dateLabel(privateDrops.health?.lastSuccessAt))}</p>${privateDrops.plan?`<p class="private-weekly-time"><b>WEEKLY DIG</b> · ${esc(dateLabel(privateDrops.plan.next_drop_at))} · scheduled</p>`:''}${pending.length?pending.map(d=>`<p><b>${d.kind==='one_time'?'ONE TIME DIG':'WEEKLY DIG'}</b> · ${esc(dateLabel(d.scheduled_at))} · ${esc(d.status==='queued'&&Date.now()-Date.parse(d.scheduled_at)>20*60000?'overdue · awaiting worker':d.status.replaceAll('_',' '))}${d.status_detail?' · '+esc(d.status_detail):''}${['failed','needs_research'].includes(d.status)?` <button data-retry-drop="${esc(d.id)}">RETRY DIG</button>`:''}</p>`).join(''):'<p>No one-time digs queued.</p>'}</section>
+  paintDashboard(app,heroMarkup()+headline.replace('class="personal-hero"',`class="personal-hero" style="order:${layout.order.indexOf('queue')+2}"`).replace('</div>',signalMarkup(signal)+'</div>')+`<section class="private-queue ${layout.sizes.queue}" style="order:${layout.order.indexOf('queue')+2}">${panelControls('queue')}<h2>${icon("schedule")} Upcoming & research status</h2><p class="private-heartbeat">Last successful worker check · ${privateDrops.health?.lastSuccessAt?esc(dateLabel(privateDrops.health.lastSuccessAt)):'No successful check recorded'}</p>${privateDrops.plan?`<p class="private-weekly-time"><b>WEEKLY DIG</b> · ${esc(dateLabel(privateDrops.plan.next_drop_at))} · ${Date.now()-Date.parse(privateDrops.plan.next_drop_at)>20*60000?'overdue · awaiting worker':'scheduled'}</p>`:''}${pending.length?pending.map(d=>`<p><b>${d.kind==='one_time'?'ONE TIME DIG':'WEEKLY DIG'}</b> · ${esc(dateLabel(d.scheduled_at))} · ${esc(d.status==='queued'&&Date.now()-Date.parse(d.scheduled_at)>20*60000?'overdue · awaiting worker':d.status.replaceAll('_',' '))}${d.status_detail?' · '+esc(d.status_detail):''}${['failed','needs_research'].includes(d.status)?` <button data-retry-drop="${esc(d.id)}">RETRY DIG</button>`:''}</p>`).join(''):'<p>No one-time digs queued.</p>'}</section>
   <section class="personal-results ${layout.sizes.results}" style="order:${layout.order.indexOf('results')+2}">${panelControls('results')}<span class="eyebrow">${drop?'VERIFIED CATALOG SELECTION':'WAITING FOR YOUR FIRST DROP'}</span><h2>${icon("crate")} ${drop?.kind==='one_time'?'One Time Dig':'My weekly drop'}</h2>
   ${drop?`<p>${esc(drop.result.note)}</p><section class="personal-top-three" aria-label="Top 3 picks"><h3>${icon('top')} Top 3 <small>START HERE</small></h3><div class="personal-tracks">${drop.result.tracks.slice(0,3).map(t=>track(t,feedback)).join('')}</div></section><section class="personal-remaining" aria-label="Remaining recommendations"><h3>${icon('crate')} Dig deeper <small>${Math.max(0,drop.result.tracks.length-3)} MORE PICKS</small></h3><div class="personal-tracks">${drop.result.tracks.slice(3).map(t=>track(t,feedback)).join('')}</div></section>`:'<p>Save a personal weekly plan or queue a One Time Dig in the Tuner. Results are visible only to your account.</p>'}</section>`,feedback);
 }

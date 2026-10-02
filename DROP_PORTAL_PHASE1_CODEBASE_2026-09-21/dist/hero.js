@@ -8,15 +8,21 @@ export const PALETTES=[
   {id:'violet-rose',name:'Violet to rose',colors:['#9757FF','#FF609C']}
 ].map(p=>({...p,rgb:p.colors.map(c=>[1,3,5].map(i=>parseInt(c.slice(i,i+2),16)))}));
 for(const p of PALETTES)p.ramp=Array.from({length:256},(_,i)=>p.rgb[0].map((v,k)=>Math.round(v+(p.rgb[1][k]-v)*i/255)).join(','));
+export const currentHeroPalette=()=>palette;
 let palette=PALETTES.find(p=>p.id===read('hero-palette',null))||PALETTES[0];
-document.addEventListener('click',event=>{
+let paletteDocument=null;
+export function setupHeroPalette(){
+ if(typeof document==='undefined'||paletteDocument===document)return;paletteDocument=document;
+ document.addEventListener('click',event=>{
   const button=event.target.closest('[data-hero-palette]');if(!button)return;
   palette=PALETTES.find(p=>p.id===button.dataset.heroPalette)||PALETTES[0];write('hero-palette',palette.id);
   document.querySelectorAll('[data-hero-palette]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.heroPalette===palette.id)));
-  document.dispatchEvent(new Event('hero-palette-change'));
-});
+  document.dispatchEvent(new (document.defaultView?.Event||Event)('hero-palette-change'));
+ });
+}
+setupHeroPalette();
 let heroFrame=null,heroObserver=null,heroCleanup=null;
-export function paletteMarkup(){return `<div class="hero-palettes" role="group" aria-label="Hero color gradient">${PALETTES.map(p=>`<button data-hero-palette="${p.id}" title="${p.name}" aria-label="${p.name}" aria-pressed="${palette.id===p.id}" style="--swatch:linear-gradient(100deg,${p.colors[0]},${p.colors[1]})"></button>`).join('')}</div>`}
+export function paletteMarkup(){setupHeroPalette();return `<div class="hero-palettes" role="group" aria-label="Hero color gradient">${PALETTES.map(p=>`<button data-hero-palette="${p.id}" title="${p.name}" aria-label="${p.name}" aria-pressed="${palette.id===p.id}" style="--swatch:linear-gradient(100deg,${p.colors[0]},${p.colors[1]})"></button>`).join('')}</div>`}
 export function heroMarkup(){return `<section class="ascii-hero" aria-label="DROP:PORTAL signal visual"><canvas id="ascii-hero-canvas" role="img" aria-label="ASCII texture with evolving rotational flow"></canvas><div class="ascii-hero-chrome" aria-hidden="true"><span>LIVE SIGNAL / 001</span><i></i><span>DROP:PORTAL</span></div><noscript><img src="/ascii-portal.png" alt="Cyan ASCII portal graphic"></noscript></section>`}
 export function stopHero(){if(heroFrame!==null)cancelAnimationFrame(heroFrame);heroFrame=null;heroObserver?.disconnect();heroObserver=null;heroCleanup?.();heroCleanup=null}
 export function initHero(){
