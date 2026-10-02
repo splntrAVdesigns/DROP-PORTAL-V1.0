@@ -25,15 +25,16 @@ test('planner respects taste and registry starts with no ready badge',async()=>{
 test('MusicBrainz date precision, search truncation, and invalid release dates',async()=>{
   const id='11111111-1111-4111-8111-111111111111';
   const rows=[{'id':id,title:'Deep Passage','artist-credit':[{name:'Hidden Producer'}],
-    'first-release-date':'2026-09-20'},{id,title:'Month Only','artist-credit':[{name:'Hidden Producer'}],
+    'first-release-date':'2026-09-20'},{id:'22222222-2222-4222-8222-222222222222',title:'Month Only','artist-credit':[{name:'Hidden Producer'}],
     'first-release-date':'2026-09'},{id,title:'Invalid','artist-credit':[{name:'Hidden Producer'}],
     'first-release-date':'2026-09-31'}];
   const calls=[];const outcome=await runner(source('musicbrainz-live','musicbrainz-recordings'),async url=>{
     calls.push(url);return response({recordings:rows,count:100});
   });
-  assert.equal(calls.length,2);assert.equal(outcome.candidates.length,1);
+  assert.equal(calls.length,2);assert.equal(outcome.candidates.length,2);
   assert.equal(outcome.coverage[0].state,'truncated');assert.equal(outcome.coverage[0].cursor,'6');
   assert.equal(outcome.candidates[0].evidence[0].claimPrecision,'day');
+  assert.equal(outcome.candidates[1].releaseDate,null);assert.equal(outcome.candidates[1].datePrecision,'month');
 });
 test('SoundCloud upload remains a lead; unsafe pagination and redirects cannot be fetched',async()=>{
   let calls=0;const track={id:123,title:'Deep Passage',metadata_artist:'Hidden Producer',created_at:'2026-09-21T12:00:00Z',
@@ -71,15 +72,15 @@ test('Mixcloud pagination and tracklists are leads, never verified release dates
   assert.equal(normalizeMixcloudShow({...show,url:'http://www.mixcloud.com/selector/rare-mix/'},s,now).length,0);
   const bad=await runner(s,async()=>response({data:[],paging:{next:'https://evil.example'}}));assert.equal(bad.coverage[0].state,'error');
 });
-test('corroborated release plus a listening link is eligible; conflicting dates are withheld',()=>{
+test('matching names and a listening link cannot establish verified recording identity',()=>{
   const release={id:'research-aaaaaaaaaaaaaaaaaaaaaaaa',identityKey:'hidden producer|deep passage',artistName:'Hidden Producer',title:'Deep Passage',releaseDate:'2026-09-20',
     dateBasis:'confirmed-release',datePrecision:'day',destinations:[{kind:'metadata',url:'https://musicbrainz.org/recording/123'}],evidence:[{sourceId:'mb',url:'https://musicbrainz.org/recording/123'}]};
   const upload={...release,id:'research-bbbbbbbbbbbbbbbbbbbbbbbb',releaseDate:null,dateBasis:'upload-only',datePrecision:'unknown',
     destinations:[{kind:'listen',url:'https://soundcloud.com/hidden/deep'}],evidence:[{sourceId:'sc',url:'https://soundcloud.com/hidden/deep'}]};
   assert.equal(eligibleResearchCandidate(upload,window),false);
-  const merged=mergePersonalCandidates([release,upload])[0];assert.equal(eligibleResearchCandidate(merged,window),true);
-  assert.equal(researchTrack(merged).links[0].kind,'listen');
-  assert.equal(eligibleResearchCandidate(mergePersonalCandidates([release,{...release,id:'research-cccccccccccccccccccccccc',releaseDate:'2026-09-21'}])[0],window),false);
+  const merged=mergePersonalCandidates([release,upload]);assert.equal(merged.length,2);
+  assert.equal(eligibleResearchCandidate(merged[0],window),false);
+  assert.equal(researchTrack(merged[0]).links.length,0);
 });
 test('migration links private runs to drops and hides source facts from authenticated users',async()=>{
   const db=new PGlite();try{

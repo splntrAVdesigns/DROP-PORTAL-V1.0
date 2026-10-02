@@ -23,12 +23,14 @@ export function makePersonalDataHandler(deps={}){
       const result={state,feedback:feedback.data,nextOffset:feedback.data.length===1000?offset+1000:null,searchRequest:personalSearchRequest(state,date)};
       if(req.query?.export==='true'){
         const events=await client.from('dp_feedback_events').select('track_id,kind,value,meaning,occurred_at').eq('user_id',user.id).gte('occurred_at',new Date(Date.now()-180*86400000).toISOString()).order('id').range(offset,offset+999);checkDatabase(events.error);
-        const [plan,drops]=await Promise.all([
+        const [plan,drops,history]=await Promise.all([
           client.from('dp_personal_plans').select('*').eq('user_id',user.id).maybeSingle(),
-          client.from('dp_personal_drops').select('*').eq('user_id',user.id).order('scheduled_at',{ascending:false}).range(offset,offset+999)
-        ]);checkDatabase(plan.error);checkDatabase(drops.error);
+          client.from('dp_personal_drops').select('*').eq('user_id',user.id).order('scheduled_at',{ascending:false}).range(offset,offset+999),
+          client.from('dp_recommendation_history').select('identity_key,drop_id,track_id,recommended_at').eq('user_id',user.id).order('identity_key').range(offset,offset+999)
+        ]);checkDatabase(plan.error);checkDatabase(drops.error);checkDatabase(history.error);
         result.plan=plan.data;result.drops=drops.data;result.events=events.data;result.exportedAt=new Date().toISOString();
-        result.nextOffset=feedback.data.length===1000||events.data.length===1000||drops.data.length===1000?offset+1000:null;
+        result.recommendationHistory=history.data;
+        result.nextOffset=feedback.data.length===1000||events.data.length===1000||drops.data.length===1000||history.data.length===1000?offset+1000:null;
       }
       return personalReply(res,200,result);
     }

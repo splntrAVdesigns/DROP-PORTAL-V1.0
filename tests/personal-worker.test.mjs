@@ -8,6 +8,7 @@ import {PERSONAL_DEFAULTS} from '../lib/personal-contracts.js';
 function database(seed){
   const tables=structuredClone(seed);let seq=0;
   return {tables,async rpc(name,p){
+    if(name==='dp_filter_recommendations')return {data:p.p_tracks.filter(t=>!(tables.dp_recommendation_history||[]).some(h=>h.user_id===p.p_user&&h.track_id===t.id)),error:null};
     if(name!=='dp_queue_due_weekly')throw Error('Unexpected RPC');
     const plan=tables.dp_personal_plans.find(x=>x.user_id===p.p_user);
     if(!plan||plan.revision!==p.p_revision||plan.next_drop_at!==p.p_at)return {data:false,error:null};
@@ -93,4 +94,16 @@ test('worker identifies fresh research and archive fallback in its saved result'
   assert.deepEqual(result.selectionSources,{freshResearch:2,verifiedArchiveFallback:8});
   assert.equal(result.researchRunId,'run-a');assert.match(result.note,/verified catalog selections used as fallback/);
   assert.equal(db.tables.dp_research_runs[0].fresh_selected,2);
+});
+
+test('production history filtering excludes previous archive picks and makes exhausted pools visible',async()=>{
+  const data={...seed([job('a','A')]),dp_recommendation_history:tracks.slice(0,2).map(t=>({user_id:'A',track_id:t.id}))};
+  const db=database(data);
+  await runPersonalWorker(db,{now,historyEnabled:true,catalogLoader:async()=>[{tracks}]});
+  assert.equal(db.tables.dp_personal_drops[0].status,'ready');
+  assert.ok(db.tables.dp_personal_drops[0].result.tracks.every(t=>!['t-0','t-1'].includes(t.id)));
+  const exhausted=database({...seed([job('b','A')]),dp_recommendation_history:tracks.map(t=>({user_id:'A',track_id:t.id}))});
+  await runPersonalWorker(exhausted,{now,historyEnabled:true,catalogLoader:async()=>[{tracks}]});
+  assert.equal(exhausted.tables.dp_personal_drops[0].status,'needs_research');
+  assert.match(exhausted.tables.dp_personal_drops[0].status_detail,/Previously recommended/);
 });

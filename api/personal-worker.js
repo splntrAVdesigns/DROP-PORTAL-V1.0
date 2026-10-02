@@ -5,7 +5,7 @@ import {nextPersonalOccurrence,curatePersonalDrop} from '../lib/personal-discove
 import {researchPersonalJob,finishPersonalResearch} from '../lib/personal-research-runtime.js';
 
 const reply=(res,status,data)=>{res.setHeader('Cache-Control','no-store');return res.status(status).json(data);};
-const fail=error=>{throw Error(error?.message||'Personal worker storage error');};
+const fail=error=>{throw Object.assign(Error(error?.message||'Personal worker storage error'),{code:error?.code});};
 const readJson=async(path)=>{
   const file=await gh('contents/'+path+'?ref=main');
   return JSON.parse(Buffer.from(file.content,'base64').toString('utf8'));
@@ -42,7 +42,7 @@ async function catalog(){
     catch{return payload;}
   }));
 }
-export async function runPersonalWorker(client,{now=new Date(),catalogLoader=catalog,limit=20,researchRunner=null,maxResearchJobs=20}={}){
+export async function runPersonalWorker(client,{now=new Date(),catalogLoader=catalog,limit=20,researchRunner=null,maxResearchJobs=20,historyEnabled=false}={}){
   const due=now.toISOString(),summary={queued:0,ready:0,needsResearch:0,recovered:0,failed:0,freshSelected:0,fallbackSelected:0,errors:[]};
   const staleBefore=new Date(+now-5*60000).toISOString();
   const stalled=await client.from('dp_personal_drops').select('id,attempts,updated_at').eq('status','running').lt('updated_at',staleBefore).limit(limit);if(stalled.error)fail(stalled.error);
@@ -69,9 +69,21 @@ export async function runPersonalWorker(client,{now=new Date(),catalogLoader=cat
       if(claim.error)fail(claim.error);if(!claim.data?.length)continue;
       let research={runId:null,tracks:[],coverage:[]};
       if(researchRunner)research=await researchRunner(client,job,{now});
-      if(research.tracks.length<job.profile_snapshot.count)releases??=await catalogLoader();
+      // A raw candidate count cannot predict eligibility after lifetime history filtering.
+      releases??=await catalogLoader();
       const f=await client.from('dp_feedback').select('track_id,kind,value').eq('user_id',job.user_id);if(f.error)fail(f.error);
-      const selection=curatePersonalDrop([{tracks:research.tracks},...(releases||[])],job.profile_snapshot,f.data,new Date(job.scheduled_at));
+      let payloads=[{tracks:research.tracks},...(releases||[])];
+      if(historyEnabled){
+        const pool=payloads.flatMap(p=>p.tracks||[]).filter(t=>t.id&&t.artistName&&t.title);
+        const unseen=[];
+        for(let offset=0;offset<pool.length;offset+=200){
+          const filtered=await client.rpc('dp_filter_recommendations',{p_user:job.user_id,p_tracks:pool.slice(offset,offset+200)});
+          if(filtered.error)fail(filtered.error);unseen.push(...filtered.data);
+        }
+        payloads=[{tracks:unseen}];
+      }
+      const selection=curatePersonalDrop(payloads,job.profile_snapshot,f.data,new Date(job.scheduled_at));
+      if(historyEnabled&&selection.status==='needs_research')selection.detail+=' Previously recommended recordings and related versions were excluded.';
       const freshIds=new Set(research.tracks.map(t=>t.id));
       const fresh=selection.result?.tracks.filter(t=>freshIds.has(t.id)).length||0;
       const fallback=selection.result?.tracks.length-fresh||0;
@@ -79,8 +91,11 @@ export async function runPersonalWorker(client,{now=new Date(),catalogLoader=cat
         selection.result.source=fallback?'researched-with-verified-archive-fallback':'fresh-verified-research';
         selection.result.researchRunId=research.runId;
         selection.result.selectionSources={freshResearch:fresh,verifiedArchiveFallback:fallback};
+        selection.result.researchCoverage=research.coverage;
         selection.result.note=fallback?`${fresh} fresh researched tracks; ${fallback} previously published verified catalog selections used as fallback.`:
           `${fresh} fresh researched tracks with day-precision release evidence and listening or store links.`;
+        const incomplete=(research.coverage||[]).filter(s=>s.status!=='disabled'&&(s.status!=='ready'||s.state!=='complete'));
+        if(incomplete.length)selection.result.note+=` Research coverage is partial: ${incomplete.map(s=>s.sourceId+' ('+s.state+')').join(', ')}.`;
       }else if(researchRunner){
         selection.detail=`${selection.detail} Fresh research produced ${research.tracks.length} eligible tracks; archive fallback was checked.`;
       }
@@ -94,7 +109,9 @@ export async function runPersonalWorker(client,{now=new Date(),catalogLoader=cat
       summary.errors.push('Drop processing failed.');
       if(job.attempts>=2)summary.failed++;
       const recovery=await client.from('dp_personal_drops').update({status:job.attempts>=2?'failed':'queued',
-        status_detail:job.attempts>=2?'Research source unavailable after three attempts.':'Research source temporarily unavailable; retrying.',
+        status_detail:e.code==='23505'&&e.message.includes('duplicate_recommendation')?
+          'A concurrent drop already selected a recording. No duplicate was published; selection will retry.':
+          job.attempts>=2?'Research source unavailable after three attempts.':'Research source temporarily unavailable; retrying.',
         updated_at:new Date().toISOString()}).eq('id',job.id).eq('status','running').eq('attempts',job.attempts+1);
       if(recovery.error)summary.errors.push('Drop recovery failed.');
     }
@@ -114,7 +131,7 @@ export default async function handler(req,res){
     const runId=randomUUID();
     const started=await client.rpc('dp_start_worker_run',{p_id:runId});if(started.error)fail(started.error);
     let summary;
-    try{summary=await runPersonalWorker(client,{researchRunner:researchPersonalJob,maxResearchJobs:1});}catch(error){
+    try{summary=await runPersonalWorker(client,{researchRunner:researchPersonalJob,maxResearchJobs:1,historyEnabled:true});}catch(error){
       await client.from('dp_worker_runs').update({finished_at:new Date().toISOString(),outcome:'failed'}).eq('id',runId);throw error;
     }
     const finished=await client.from('dp_worker_runs').update({finished_at:new Date().toISOString(),outcome:summary.errors.length?'failed':'success'}).eq('id',runId);if(finished.error)fail(finished.error);
