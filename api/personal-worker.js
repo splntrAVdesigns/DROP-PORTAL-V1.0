@@ -2,6 +2,7 @@ import {createClient} from '@supabase/supabase-js';
 import {timingSafeEqual,randomUUID} from 'node:crypto';
 import {gh} from '../lib/repository.js';
 import {nextPersonalOccurrence,curatePersonalDrop} from '../lib/personal-discovery.js';
+import {researchPersonalJob,finishPersonalResearch} from '../lib/personal-research-runtime.js';
 
 const reply=(res,status,data)=>{res.setHeader('Cache-Control','no-store');return res.status(status).json(data);};
 const fail=error=>{throw Error(error?.message||'Personal worker storage error');};
@@ -41,8 +42,8 @@ async function catalog(){
     catch{return payload;}
   }));
 }
-export async function runPersonalWorker(client,{now=new Date(),catalogLoader=catalog,limit=20}={}){
-  const due=now.toISOString(),summary={queued:0,ready:0,needsResearch:0,recovered:0,failed:0,errors:[]};
+export async function runPersonalWorker(client,{now=new Date(),catalogLoader=catalog,limit=20,researchRunner=null,maxResearchJobs=20}={}){
+  const due=now.toISOString(),summary={queued:0,ready:0,needsResearch:0,recovered:0,failed:0,freshSelected:0,fallbackSelected:0,errors:[]};
   const staleBefore=new Date(+now-5*60000).toISOString();
   const stalled=await client.from('dp_personal_drops').select('id,attempts,updated_at').eq('status','running').lt('updated_at',staleBefore).limit(limit);if(stalled.error)fail(stalled.error);
   for(const job of stalled.data){
@@ -60,18 +61,35 @@ export async function runPersonalWorker(client,{now=new Date(),catalogLoader=cat
       if(queued.data)summary.queued++;
     }catch(e){summary.errors.push('Weekly queue transaction failed.');}
   }
-  const jobs=await client.from('dp_personal_drops').select('*').eq('status','queued').lte('scheduled_at',due).order('scheduled_at').limit(limit);if(jobs.error)fail(jobs.error);
+  const jobs=await client.from('dp_personal_drops').select('*').eq('status','queued').lte('scheduled_at',due).order('scheduled_at').limit(Math.min(limit,maxResearchJobs));if(jobs.error)fail(jobs.error);
   let releases=null;
   for(const job of jobs.data){
     try{
       const claim=await client.from('dp_personal_drops').update({status:'running',attempts:job.attempts+1,updated_at:due}).eq('id',job.id).eq('status','queued').eq('attempts',job.attempts).select('id');
       if(claim.error)fail(claim.error);if(!claim.data?.length)continue;
-      releases??=await catalogLoader();
+      let research={runId:null,tracks:[],coverage:[]};
+      if(researchRunner)research=await researchRunner(client,job,{now});
+      if(research.tracks.length<job.profile_snapshot.count)releases??=await catalogLoader();
       const f=await client.from('dp_feedback').select('track_id,kind,value').eq('user_id',job.user_id);if(f.error)fail(f.error);
-      const selection=curatePersonalDrop(releases,job.profile_snapshot,f.data,new Date(job.scheduled_at));
-      const saved=await client.from('dp_personal_drops').update({status:selection.status,result:selection.result||null,status_detail:selection.detail||null,updated_at:new Date().toISOString()})
+      const selection=curatePersonalDrop([{tracks:research.tracks},...(releases||[])],job.profile_snapshot,f.data,new Date(job.scheduled_at));
+      const freshIds=new Set(research.tracks.map(t=>t.id));
+      const fresh=selection.result?.tracks.filter(t=>freshIds.has(t.id)).length||0;
+      const fallback=selection.result?.tracks.length-fresh||0;
+      if(selection.result&&researchRunner){
+        selection.result.source=fallback?'researched-with-verified-archive-fallback':'fresh-verified-research';
+        selection.result.researchRunId=research.runId;
+        selection.result.selectionSources={freshResearch:fresh,verifiedArchiveFallback:fallback};
+        selection.result.note=fallback?`${fresh} fresh researched tracks; ${fallback} previously published verified catalog selections used as fallback.`:
+          `${fresh} fresh researched tracks with day-precision release evidence and listening or store links.`;
+      }else if(researchRunner){
+        selection.detail=`${selection.detail} Fresh research produced ${research.tracks.length} eligible tracks; archive fallback was checked.`;
+      }
+      if(researchRunner)await finishPersonalResearch(client,research.runId,{fresh,fallback});
+      const fields={status:selection.status,result:selection.result||null,status_detail:selection.detail||null,updated_at:new Date().toISOString()};
+      if(researchRunner)fields.research_run_id=research.runId;
+      const saved=await client.from('dp_personal_drops').update(fields)
         .eq('id',job.id).eq('status','running').eq('attempts',job.attempts+1).select('id');if(saved.error)fail(saved.error);
-      if(saved.data.length){if(selection.status==='ready')summary.ready++;else summary.needsResearch++;}
+      if(saved.data.length){if(selection.status==='ready')summary.ready++;else summary.needsResearch++;summary.freshSelected+=fresh;summary.fallbackSelected+=fallback;}
     }catch(e){
       summary.errors.push('Drop processing failed.');
       if(job.attempts>=2)summary.failed++;
@@ -96,7 +114,7 @@ export default async function handler(req,res){
     const runId=randomUUID();
     const started=await client.rpc('dp_start_worker_run',{p_id:runId});if(started.error)fail(started.error);
     let summary;
-    try{summary=await runPersonalWorker(client);}catch(error){
+    try{summary=await runPersonalWorker(client,{researchRunner:researchPersonalJob,maxResearchJobs:1});}catch(error){
       await client.from('dp_worker_runs').update({finished_at:new Date().toISOString(),outcome:'failed'}).eq('id',runId);throw error;
     }
     const finished=await client.from('dp_worker_runs').update({finished_at:new Date().toISOString(),outcome:summary.errors.length?'failed':'success'}).eq('id',runId);if(finished.error)fail(finished.error);

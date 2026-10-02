@@ -80,3 +80,17 @@ test('missed weekly checks recover one due occurrence and advance to a future da
   assert.equal(db.tables.dp_personal_drops.length,1);
   assert.ok(Date.parse(db.tables.dp_personal_plans[0].next_drop_at)>+now);
 });
+
+test('worker identifies fresh research and archive fallback in its saved result',async()=>{
+  const fresh=['Fav0','Fav1'].map((artistName,i)=>({...tracks[i],id:'fresh-'+i,artistName,title:'Rare '+i,score:55,
+    provenance:{basis:'fresh-research',sources:['bandcamp-indexed']}}));
+  const tailored={...profile,artists:['Fav0','Fav1']};
+  const db=database({...seed([job('a','A',{profile_snapshot:tailored})]),dp_research_runs:[{id:'run-a'}]});
+  const summary=await runPersonalWorker(db,{now,catalogLoader:async()=>[{tracks}],
+    researchRunner:async()=>({runId:'run-a',tracks:fresh,coverage:[]})});
+  const result=db.tables.dp_personal_drops[0].result;
+  assert.equal(summary.ready,1);assert.equal(summary.freshSelected,2);assert.equal(summary.fallbackSelected,8);
+  assert.deepEqual(result.selectionSources,{freshResearch:2,verifiedArchiveFallback:8});
+  assert.equal(result.researchRunId,'run-a');assert.match(result.note,/verified catalog selections used as fallback/);
+  assert.equal(db.tables.dp_research_runs[0].fresh_selected,2);
+});

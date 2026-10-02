@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "sources": [
+    {"id":"musicbrainz-live","kind":"musicbrainz-recordings","enabled":true,"initialStatus":"access-blocked","maxRequests":3,"maxItems":25},
+    {"id":"soundcloud-live","kind":"soundcloud-tracks","enabled":true,"initialStatus":"access-blocked","maxRequests":3,"maxItems":25,"credential":"SOUNDCLOUD_CLIENT_ID + SOUNDCLOUD_CLIENT_SECRET or SOUNDCLOUD_ACCESS_TOKEN"},
+    {"id":"mixcloud-leads","kind":"mixcloud-shows","enabled":true,"initialStatus":"access-blocked","maxRequests":2,"maxItems":15},
+    {"id":"bandcamp-indexed","kind":"bandcamp-indexed","enabled":true,"initialStatus":"access-blocked","maxRequests":2,"maxItems":5,"credential":"BRAVE_SEARCH_API_KEY"},
+    {"id":"beatport","kind":"partner-store","enabled":false,"initialStatus":"disabled","maxRequests":0,"maxItems":0},
+    {"id":"discogs","kind":"partner-store","enabled":false,"initialStatus":"disabled","maxRequests":0,"maxItems":0}
+  ]
+}
