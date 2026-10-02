@@ -94,7 +94,7 @@ body:has(#personal-listening-dock:not([hidden])) main#app{padding-bottom:280px}
 .private-home>.personal-results.compact{grid-column:span 9}
 @media(max-width:780px){.private-home:has(>.private-queue.compact)>.personal-hero,.private-home>.private-queue.compact,.private-home>.personal-results.compact{grid-column:span 12}}
 /* Compact player skin and desktop floating position. */
-#personal-listening-dock{width:min(760px,calc(100% - 28px));padding:12px 14px}
+#personal-listening-dock{width:min(646px,calc(100% - 28px));padding:12px 14px}
 .personal-listening-head{gap:12px;margin-bottom:9px;cursor:default}
 .personal-listening-head>div:first-child{display:flex;align-items:center;gap:9px;min-width:0;flex:1;flex-wrap:wrap}
 .personal-listening-head .eyebrow{font-size:9px}.personal-listening-head strong{font-size:13px;margin:0;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.personal-listening-head small{font-size:11px}
@@ -114,3 +114,5 @@ body:has(#personal-listening-dock:not([hidden])) main#app{padding-bottom:280px}
 .personal-listening-head:focus-visible{outline:1px solid var(--cyan);outline-offset:4px;border-radius:3px}
 @media(min-width:900px) and (pointer:fine){.personal-listening-head{cursor:grab;touch-action:none}.is-dragging .personal-listening-head{cursor:grabbing}.is-dragging iframe{pointer-events:none}}
 @media(max-width:899px){#personal-listening-dock.is-floating{left:50%!important;top:auto!important;bottom:14px;transform:translateX(-50%)}[data-listening-reset-position]{display:none}.personal-listening-head .eyebrow{width:100%}.personal-listening-head-actions .personal-listening-note{max-width:95px;font-size:8px}.personal-listening-head>div:first-child{gap:4px 8px}.personal-listening-head strong{max-width:140px}.personal-listening-controls{flex-wrap:wrap}.personal-listening-wave{flex-basis:60%;height:40px}.personal-listening-controls>[data-listening-seek]{flex-basis:40%;order:3}}
+
+.private-drop-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}.private-drop-heading h2{margin-bottom:0}.private-drop-code{color:var(--cyan,#04d9ff);font:700 18px monospace;letter-spacing:2px;white-space:nowrap}.private-archive .private-drop-code{font-size:13px;margin-left:auto}.private-archive button{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
