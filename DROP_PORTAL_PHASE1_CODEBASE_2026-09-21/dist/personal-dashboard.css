@@ -116,3 +116,26 @@ body:has(#personal-listening-dock:not([hidden])) main#app{padding-bottom:280px}
 @media(max-width:899px){#personal-listening-dock.is-floating{left:50%!important;top:auto!important;bottom:14px;transform:translateX(-50%)}[data-listening-reset-position]{display:none}.personal-listening-head .eyebrow{width:100%}.personal-listening-head-actions .personal-listening-note{max-width:95px;font-size:8px}.personal-listening-head>div:first-child{gap:4px 8px}.personal-listening-head strong{max-width:140px}.personal-listening-controls{flex-wrap:wrap}.personal-listening-wave{flex-basis:60%;height:40px}.personal-listening-controls>[data-listening-seek]{flex-basis:40%;order:3}}
 
 .private-drop-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}.private-drop-heading h2{margin-bottom:0}.private-drop-code{color:var(--cyan,#04d9ff);font:700 18px monospace;letter-spacing:2px;white-space:nowrap}.private-archive .private-drop-code{font-size:13px;margin-left:auto}.private-archive button{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+
+/* Private layout editor keeps the gradient choices beside the hero at every width. */
+.private-gradient-editor{grid-column:1/-1;order:0;display:flex;align-items:center;gap:15px;flex-wrap:wrap;padding:12px 16px;background:#182329;border:1px solid #31515b;border-radius:7px}
+.private-gradient-editor>span{color:var(--cyan);font:700 11px/1.4 monospace;letter-spacing:1px}
+.private-gradient-editor .hero-palettes{flex-wrap:wrap}
+.private-gradient-editor .hero-palettes button{width:34px;height:30px}
+
+/* Small text actions retain full touch targets without visible button boxes. */
+.private-actions{column-gap:14px;row-gap:0}
+.private-actions button[data-personal-track],.private-actions button[data-personal-track]:hover{border:0;background:none;border-radius:0;box-shadow:none;padding:8px 2px;min-height:44px;color:#b9cbd0;font:12px monospace;white-space:nowrap}
+.private-actions button[data-personal-track]:hover,.private-actions button[data-personal-track][aria-pressed=true],.private-actions button[data-personal-track][aria-pressed=true]:hover{color:var(--cyan);border:0;background:none}
+
+@media(max-width:700px){
+  .private-actions a{flex-basis:100%;margin-right:0}
+  .private-gradient-editor{gap:10px}
+  .private-gradient-editor .hero-palettes button{width:36px;height:34px}
+}
+@media(max-width:899px){
+  .personal-listening-controls{flex-wrap:nowrap}
+  .personal-listening-wave{flex:1 1 0;min-width:0;height:28px}
+  .personal-listening-controls[data-player-kind=audio]{flex-wrap:wrap}
+  .personal-listening-controls>[data-listening-seek]{flex:1 1 100%;order:3}
+}

@@ -135,9 +135,11 @@ test('private dashboard gates the board and shows only the signed-in account dro
     personal.user={id:a,email:'a@example.com'};privateDrops.owner=a;privateDrops.plan=null;privateDrops.drops=[];renderPrivateDashboard();
     assert.match(window.document.querySelector('#app').textContent,/Set your taste and weekly time/);
     assert.ok(window.document.querySelector('#ascii-hero-canvas'));
+    assert.match(window.document.querySelector('.ascii-hero-chrome').textContent,/DROP \/ —/);
     assert.equal(window.document.querySelector('#edit').hidden,false);
-    privateDrops.drops=[{id:'11111111-1111-4111-8111-111111111112',kind:'one_time',status:'ready',result:{note:'Verified catalog',tracks:[{id:'t1',artistName:'A',title:'Private A',personalRank:1,links:[],releaseDate:'2026-09-30',reason:'A',lane:0,preview:{kind:'provider-embed',embedUrl:'https://bandcamp.com/EmbeddedPlayer/track=123/'}}]}}];
+    privateDrops.drops=[{id:'11111111-1111-4111-8111-111111111112',kind:'one_time',status:'ready',result:{note:'Verified catalog',tracks:[{id:'t1',artistName:'A',title:'Private A',personalRank:1,links:[],releaseDate:'2026-09-30',reason:'A',lane:0,preview:{kind:'provider-embed',embedUrl:'https://bandcamp.com/EmbeddedPlayer/track=123/'}}]}},{id:'11111111-1111-4111-8111-111111111115',kind:'weekly',status:'ready',weekly_sequence:2,result:{note:'Weekly catalog',tracks:[]}}];
     renderPrivateDashboard();assert.match(window.document.querySelector('#app').textContent,/Private A/);
+    assert.match(window.document.querySelector('.ascii-hero-chrome').textContent,/DROP \/ 002/,'latest weekly number remains visible during a One Time Dig');
     assert.ok(window.document.querySelector('[data-personal-preview]'));
     const {playPersonalPreview}=await import('../DROP_PORTAL_PHASE1_CODEBASE_2026-09-21/dist/personal-listening.js');
     await playPersonalPreview('t1');
@@ -147,13 +149,19 @@ test('private dashboard gates the board and shows only the signed-in account dro
     assert.match(window.document.querySelector('.private-lane-key').textContent,/Future/);
     window.document.querySelector('#edit').click();
     assert.equal(window.document.querySelector('#edit').getAttribute('aria-expanded'),'true');
+    assert.equal(window.document.querySelector('.private-gradient-editor [data-hero-palette]').getAttribute('aria-label'),'Cyan to violet');
+    window.document.querySelector('.private-gradient-editor [data-hero-palette="teal-coral"]').click();
+    assert.equal(window.document.querySelector('#personal-listening-dock').style.getPropertyValue('--listening-color-a'),'#00F5C4');
+    assert.equal(window.document.querySelector('iframe'),frame,'choosing a palette keeps playback mounted');
     window.document.querySelector('[data-layout-panel="queue"]').click();
     assert.equal(window.document.querySelector('.private-queue').classList.contains('compact'),true);
     assert.equal(window.document.querySelector('iframe'),frame,'layout edits should keep the player attached');
     privateDrops.loading=true;renderPrivateDashboard();assert.equal(window.document.querySelector('iframe'),frame);
     personal.feedback={'t1:saved':{track_id:'t1',kind:'saved',value:true,updated_at:new Date().toISOString()}};
     renderPrivateDashboard();assert.equal(window.document.querySelector('iframe'),frame);
-    assert.equal(window.document.querySelector('[data-personal-kind=saved]').textContent,'Saved ✓');
+    assert.equal(window.document.querySelector('[data-personal-kind=saved]').textContent,'Save ✓');
+    assert.equal(window.document.querySelector('[data-personal-kind=saved]').getAttribute('aria-pressed'),'true');
+    assert.equal(window.document.querySelector('[data-personal-kind=heard]').textContent,'Heard');
     privateDrops.drops=[
       {id:'11111111-1111-4111-8111-111111111113',kind:'one_time',status:'queued',created_at:'2026-10-01T20:00:00Z',scheduled_at:'2026-10-02T02:00:00Z'},
       {id:'11111111-1111-4111-8111-111111111114',kind:'one_time',status:'queued',created_at:'2026-10-02T11:00:00Z',scheduled_at:'2026-10-02T13:00:00Z'}

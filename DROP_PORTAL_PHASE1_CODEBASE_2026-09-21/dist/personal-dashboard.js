@@ -37,8 +37,8 @@ function track(t,feedback){
   return `<article class="personal-track"><div class="personal-track-head"><span class="eyebrow">${String(t.personalRank||'—').padStart(2,'0')} / ${esc(t.subgenre||'DRUM & BASS')}</span><span>${esc(formatReleaseDate(t.releaseDate))}</span></div>
     <h3>${esc(t.title)}</h3><p>${esc(t.artistName)} · ${esc(t.label||'Label unverified')}</p><div class="private-preview">${player}</div>
     <p>${esc(t.personalReason||'Verified catalog match')} · ${esc(t.reason||'Verified release')}</p><div class="private-actions">${listen?`<a href="${esc(listen.url)}" target="_blank" rel="noopener noreferrer">Listen / details ↗</a>`:''}
-    <button data-personal-track="${esc(t.id)}" data-personal-kind="saved" aria-pressed="${!!feedback[t.id]?.saved}">${feedback[t.id]?.saved?'Saved ✓':'Save'}</button>
-    <button data-personal-track="${esc(t.id)}" data-personal-kind="heard" aria-pressed="${!!feedback[t.id]?.heard}">${feedback[t.id]?.heard?'Heard ✓':'Mark heard'}</button></div></article>`;
+    <button data-personal-track="${esc(t.id)}" data-personal-kind="saved" aria-pressed="${!!feedback[t.id]?.saved}" aria-label="${feedback[t.id]?.saved?'Remove saved track':'Save track'}">${feedback[t.id]?.saved?'Save ✓':'Save'}</button>
+    <button data-personal-track="${esc(t.id)}" data-personal-kind="heard" aria-pressed="${!!feedback[t.id]?.heard}" aria-label="${feedback[t.id]?.heard?'Mark track unheard':'Mark track heard'}">${feedback[t.id]?.heard?'Heard ✓':'Heard'}</button></div></article>`;
 }
 
 function icon(kind){const paths={signal:'M3 15v-4m5 4V6m5 9V3m5 12V8',schedule:'M4 5h14v13H4zM7 2v5m8-5v5M4 9h14m-9 3v3h3',crate:'M3 6h16v12H3zM7 6V3h8v3m-7 5h6',top:'M5 17 17 5M7 5h10v10'};return `<svg class="private-section-icon" viewBox="0 0 22 22" aria-hidden="true"><path d="${paths[kind]}"/></svg>`;}
@@ -64,7 +64,8 @@ function paintDashboard(app,markup,feedback){
     const controls=newResults.querySelector('.private-panel-controls');if(controls)oldResults.insertBefore(controls,oldResults.firstChild);
     oldResults.querySelectorAll('[data-personal-track]').forEach(b=>{
       const kind=b.dataset.personalKind,on=!!feedback[b.dataset.personalTrack]?.[kind];
-      b.setAttribute('aria-pressed',String(on));b.textContent=kind==='saved'?(on?'Saved ✓':'Save'):(on?'Heard ✓':'Mark heard');
+      b.setAttribute('aria-pressed',String(on));b.textContent=kind==='saved'?(on?'Save ✓':'Save'):(on?'Heard ✓':'Heard');
+      b.setAttribute('aria-label',kind==='saved'?(on?'Remove saved track':'Save track'):(on?'Mark track unheard':'Mark track heard'));
     });
   }else app.innerHTML=markup;
   app.dataset.owner=owner;
@@ -82,7 +83,7 @@ export function renderPrivateDashboard(){
   const path=location.pathname.replace(/\/$/,'')||'/';
   app.classList.toggle('private-home',path==='/'&&!!personal.user&&privateDrops.owner===personal.user.id&&availability==='ready');
   const editor=document.querySelector('#edit');if(editor){editor.hidden=!personal.user||path!=='/'||availability!=='ready';editor.textContent=editing?'✓ DONE':'⊞ EDIT LAYOUT';editor.setAttribute('aria-expanded',String(editing));}
-  const palette=document.querySelector('#palette-controls');if(palette){palette.hidden=!(editing&&personal.user&&availability==='ready');palette.innerHTML=palette.hidden?'':paletteMarkup();}
+  const palette=document.querySelector('#palette-controls');if(palette){palette.hidden=true;palette.innerHTML='';}
   if(availability!=='ready'){
     stopHero();heroCanvas=null;
     if(nav)nav.hidden=true;if(tuner)tuner.hidden=true;
@@ -118,9 +119,11 @@ export function renderPrivateDashboard(){
   }
   const requested=location.hash.match(/^#drop=([0-9a-f-]{36})$/)?.[1];
   const drop=(requested&&history.find(d=>d.id===requested&&d.status==='ready'))||current;
+  const latestWeekly=history.filter(d=>d.kind==='weekly'&&d.status==='ready'&&Number.isSafeInteger(d.weekly_sequence))
+    .reduce((latest,d)=>!latest||d.weekly_sequence>latest.weekly_sequence?d:latest,null);
   const signal=personalSignal(drop);
   const pending=history.filter(d=>d.status!=='ready');
-  paintDashboard(app,heroMarkup()+headline.replace('class="personal-hero"',`class="personal-hero" style="order:${layout.order.indexOf('queue')+2}"`).replace('</div>',signalMarkup(signal)+'</div>')+`<section class="private-queue ${layout.sizes.queue}" style="order:${layout.order.indexOf('queue')+2}">${panelControls('queue')}<h2>${icon("schedule")} Upcoming & research status</h2><p class="private-heartbeat">Last successful worker check · ${privateDrops.health?.lastSuccessAt?esc(dateLabel(privateDrops.health.lastSuccessAt)):'No successful check recorded'}</p>${privateDrops.plan?`<p class="private-weekly-time"><b>WEEKLY DIG</b> · ${esc(dateLabel(privateDrops.plan.next_drop_at))} · ${Date.now()-Date.parse(privateDrops.plan.next_drop_at)>20*60000?'overdue · awaiting worker':'scheduled'}</p>`:''}${pending.length?pending.map(d=>`<p><b>${d.kind==='one_time'?'ONE TIME DIG':'WEEKLY DIG'}</b> · ${esc(dateLabel(d.scheduled_at))} · ${esc(d.status==='queued'&&Date.now()-Date.parse(d.scheduled_at)>20*60000?'overdue · awaiting worker':d.status.replaceAll('_',' '))}${d.status_detail?' · '+esc(d.status_detail):''}${['failed','needs_research'].includes(d.status)?` <button data-retry-drop="${esc(d.id)}">RETRY DIG</button>`:''}</p>`).join(''):'<p>No one-time digs queued.</p>'}</section>
+  paintDashboard(app,heroMarkup(latestWeekly?.weekly_sequence??null)+(editing?`<div class="private-gradient-editor"><span>HERO + PLAYER GRADIENT</span>${paletteMarkup()}</div>`:'')+headline.replace('class="personal-hero"',`class="personal-hero" style="order:${layout.order.indexOf('queue')+2}"`).replace('</div>',signalMarkup(signal)+'</div>')+`<section class="private-queue ${layout.sizes.queue}" style="order:${layout.order.indexOf('queue')+2}">${panelControls('queue')}<h2>${icon("schedule")} Upcoming & research status</h2><p class="private-heartbeat">Last successful worker check · ${privateDrops.health?.lastSuccessAt?esc(dateLabel(privateDrops.health.lastSuccessAt)):'No successful check recorded'}</p>${privateDrops.plan?`<p class="private-weekly-time"><b>WEEKLY DIG</b> · ${esc(dateLabel(privateDrops.plan.next_drop_at))} · ${Date.now()-Date.parse(privateDrops.plan.next_drop_at)>20*60000?'overdue · awaiting worker':'scheduled'}</p>`:''}${pending.length?pending.map(d=>`<p><b>${d.kind==='one_time'?'ONE TIME DIG':'WEEKLY DIG'}</b> · ${esc(dateLabel(d.scheduled_at))} · ${esc(d.status==='queued'&&Date.now()-Date.parse(d.scheduled_at)>20*60000?'overdue · awaiting worker':d.status.replaceAll('_',' '))}${d.status_detail?' · '+esc(d.status_detail):''}${['failed','needs_research'].includes(d.status)?` <button data-retry-drop="${esc(d.id)}">RETRY DIG</button>`:''}</p>`).join(''):'<p>No one-time digs queued.</p>'}</section>
   <section class="personal-results ${layout.sizes.results}" style="order:${layout.order.indexOf('results')+2}">${panelControls('results')}<div class="private-drop-heading"><div><span class="eyebrow">${drop?'VERIFIED CATALOG SELECTION':'WAITING FOR YOUR FIRST DROP'}</span><h2>${icon("crate")} ${drop?.kind==='one_time'?'One Time Dig':'My weekly drop'}</h2></div>${weeklyDropCode(drop)?`<span class="private-drop-code" aria-label="Weekly drop ${drop.weekly_sequence}">${weeklyDropCode(drop)}</span>`:''}</div>
   ${drop?`<p>${esc(drop.result.note)}</p><section class="personal-top-three" aria-label="Top 3 picks"><h3>${icon('top')} Top 3 <small>START HERE</small></h3><div class="personal-tracks">${drop.result.tracks.slice(0,3).map(t=>track(t,feedback)).join('')}</div></section><section class="personal-remaining" aria-label="Remaining recommendations"><h3>${icon('crate')} Dig deeper <small>${Math.max(0,drop.result.tracks.length-3)} MORE PICKS</small></h3><div class="personal-tracks">${drop.result.tracks.slice(3).map(t=>track(t,feedback)).join('')}</div></section>`:'<p>Save a personal weekly plan or queue a One Time Dig in the Tuner. Results are visible only to your account.</p>'}</section>`,feedback);
 }
