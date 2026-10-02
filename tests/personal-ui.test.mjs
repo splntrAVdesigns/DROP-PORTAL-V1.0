@@ -8,7 +8,7 @@ test('compact Tuner saves private artist/label focus, protects unsaved tabs and 
   globalThis.window=window;globalThis.document=document;
   const {personal}=await import('../DROP_PORTAL_PHASE1_CODEBASE_2026-09-21/dist/personal.js');
   const {PERSONAL_DEFAULTS}=await import('../lib/personal-contracts.js');
-  const {renderPersonalTuner,setupPersonalTuner}=await import('../DROP_PORTAL_PHASE1_CODEBASE_2026-09-21/dist/personal-tuner.js');
+  const {renderPersonalTuner,setupPersonalTuner,enablePrivatePlanUI}=await import('../DROP_PORTAL_PHASE1_CODEBASE_2026-09-21/dist/personal-tuner.js');
   Object.assign(personal,{checked:true,configured:true,user:{id:'user-a',email:'a@example.com'},state:{base_profile:structuredClone(PERSONAL_DEFAULTS),weekly_profile:null,target_date:null,revision:0,learning_enabled:false}});
   const requests=[];const oldFetch=globalThis.fetch;
   globalThis.fetch=async(path,options)=>{
@@ -35,5 +35,12 @@ test('compact Tuner saves private artist/label focus, protects unsaved tabs and 
     assert.equal(requests[0].expectedRevision,0);
     Object.assign(personal,{user:{id:'user-b',email:'b@example.com'},state:{base_profile:structuredClone(PERSONAL_DEFAULTS),weekly_profile:null,revision:0}});
     renderPersonalTuner();assert.equal(document.querySelector('.taste-chips').textContent.includes('Photek'),false);
+    enablePrivatePlanUI();renderPersonalTuner();
+    assert.equal(document.querySelector('[data-focus=groove]').disabled,true);
+    assert.equal(document.querySelector('#personal-depth'),null);
+    document.querySelector('[data-personal-scope=weekly]').click();
+    document.querySelector('[data-personal=save]').click();await new Promise(resolve=>setImmediate(resolve));
+    assert.match(document.querySelector('#personal-tuner').textContent,/Save a weekly plan first/);
+    assert.equal(requests.length,1,'Unscheduled weekly taste must never be submitted');
   }finally{globalThis.fetch=oldFetch;delete globalThis.window;delete globalThis.document;}
 });

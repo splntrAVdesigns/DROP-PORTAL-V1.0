@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {PGlite} from '@electric-sql/pglite';
+import {localDate} from '../lib/contracts.js';
 import {PERSONAL_DEFAULTS,cleanPersonalProfile,effectivePersonalProfile,personalSearchRequest,feedbackMeaning} from '../lib/personal-contracts.js';
 import {makeSessionHandler} from '../api/personal-session.js';
 import {makePersonalDataHandler} from '../api/personal-data.js';
@@ -73,4 +74,20 @@ test('personal writes reject a changed account and do not use publisher authenti
   const res=response();await handler(req('POST',{action:'save-profile'},{'x-personal-account':b}),res);assert.equal(res.code,409);
   const signedOut=makePersonalDataHandler({authenticate:async()=>{throw Object.assign(Error('Sign in'),{status:401});}});
   const denial=response();await signedOut(req('GET',null,{'x-drop-portal-admin-key':'publisher-key'}),denial);assert.equal(denial.code,401);
+});
+
+test('This Week save requires the account plan and its current scheduled target',async()=>{
+  const next=new Date(Date.now()+3*86400000).toISOString(),target=localDate(next);
+  let plan=null,calls=[];
+  const client={from(table){return {select(){return this;},eq(){return this;},async maybeSingle(){return {data:table==='dp_personal_profiles'?{...PERSONAL_DEFAULTS,base_profile:PERSONAL_DEFAULTS,revision:0,learning_enabled:false}:plan,error:null};}};},
+    async rpc(name,args){calls.push({name,args});return {data:[{revision:1}],error:null};}};
+  const handler=makePersonalDataHandler({authenticate:async()=>({user:{id:a},client})});
+  const body={action:'save-profile',scope:'weekly',expectedRevision:0,profile:PERSONAL_DEFAULTS,targetDate:target};
+  const missing=response();await handler(req('POST',body,{'x-personal-account':a}),missing);
+  assert.equal(missing.code,409);assert.equal(calls.length,0);
+  plan={next_drop_at:next};
+  const stale=response();await handler(req('POST',{...body,targetDate:'2001-01-01'},{'x-personal-account':a}),stale);
+  assert.equal(stale.code,409);assert.equal(calls.length,0);
+  const good=response();await handler(req('POST',body,{'x-personal-account':a}),good);
+  assert.equal(good.code,200);assert.equal(calls[0].args.p_target,target);
 });

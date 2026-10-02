@@ -50,6 +50,7 @@ test('migration 003 isolates plans and drops for two accounts and deletes only t
       grant usage on schema auth to authenticated; grant execute on function auth.uid() to authenticated;`);
     await db.exec(await readFile(new URL('../db/migrations/001_personal_discovery.sql',import.meta.url),'utf8'));
     await db.exec(await readFile(new URL('../db/migrations/003_personal_drops.sql',import.meta.url),'utf8'));
+    await db.exec(await readFile(new URL('../db/migrations/004_one_time_replacement.sql',import.meta.url),'utf8'));
     await db.exec('set role authenticated');
     const as=async id=>db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);
     const save=async()=>db.query('select * from public.dp_save_personal_plan($1::jsonb,null,null,false,0,3,$2::time,$3::timestamptz)',
@@ -68,6 +69,40 @@ test('migration 003 isolates plans and drops for two accounts and deletes only t
   }finally{await db.close();}
 });
 
+test('one-time replacements cancel the previous account job while retaining ready results and request limits',async()=>{
+  const db=new PGlite();
+  try{
+    await db.exec(`create role anon; create role authenticated; create role service_role; create schema auth;
+      create table auth.users(id uuid primary key); insert into auth.users values('${a}'),('${b}');
+      create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+      grant usage on schema auth to authenticated; grant execute on function auth.uid() to authenticated;`);
+    await db.exec(await readFile(new URL('../db/migrations/001_personal_discovery.sql',import.meta.url),'utf8'));
+    await db.exec(await readFile(new URL('../db/migrations/003_personal_drops.sql',import.meta.url),'utf8'));
+    await db.exec('set role authenticated');
+    const as=async id=>db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);
+    const request=async minutes=>db.query('select * from public.dp_request_one_time(now()+($1::integer * interval \'1 minute\'),$2::jsonb)',[minutes,JSON.stringify(PERSONAL_DEFAULTS)]);
+    await as(a);const first=(await request(10)).rows[0];
+    await as(b);const other=(await request(20)).rows[0];
+    await as(a);
+    // Migration also repairs older deployments with multiple queued requests.
+    await db.exec('reset role');
+    await db.exec(await readFile(new URL('../db/migrations/004_one_time_replacement.sql',import.meta.url),'utf8'));
+    await db.exec('set role authenticated');await as(a);
+    const second=(await request(30)).rows[0];
+    assert.notEqual(second.id,first.id);
+    assert.equal((await db.query("select status from public.dp_personal_drops where id=$1",[first.id])).rows[0].status,'superseded');
+    assert.equal((await db.query("select count(*)::integer as n from public.dp_personal_drops where status='queued'")).rows[0].n,1);
+    // A completed dig remains available in history after another request.
+    await db.exec('reset role');await db.query("update public.dp_personal_drops set status='ready' where id=$1",[second.id]);
+    await db.exec('set role authenticated');await as(a);
+    const third=(await request(40)).rows[0];
+    assert.equal((await db.query("select status from public.dp_personal_drops where id=$1",[second.id])).rows[0].status,'ready');
+    await assert.rejects(request(50),/Too many dig requests/);
+    await as(b);assert.equal((await db.query("select status from public.dp_personal_drops where id=$1",[other.id])).rows[0].status,'queued');
+    assert.ok(third.id);
+  }finally{await db.close();}
+});
+
 test('private dashboard gates the board and shows only the signed-in account drops',async()=>{
   const {window}=parseHTML('<html><body><header><nav></nav><div class="utilities"><button id="tuner"></button><button id="edit"></button><div id="palette-controls"></div></div></header><span id="saved-count"></span><main id="app"></main></body></html>');
   globalThis.window=window;globalThis.document=window.document;globalThis.location={pathname:'/',hash:''};
@@ -80,9 +115,25 @@ test('private dashboard gates the board and shows only the signed-in account dro
     assert.doesNotMatch(window.document.querySelector('#app').textContent,/Public weekly drop/);
     personal.user={id:a,email:'a@example.com'};privateDrops.owner=a;privateDrops.plan=null;privateDrops.drops=[];renderPrivateDashboard();
     assert.match(window.document.querySelector('#app').textContent,/Set your taste and weekly time/);
-    privateDrops.drops=[{id:'11111111-1111-4111-8111-111111111112',kind:'one_time',status:'ready',result:{note:'Verified catalog',tracks:[{id:'t1',artistName:'A',title:'Private A',personalRank:1,links:[],releaseDate:'2026-09-30',reason:'A',lane:0}]}}];
+    privateDrops.drops=[{id:'11111111-1111-4111-8111-111111111112',kind:'one_time',status:'ready',result:{note:'Verified catalog',tracks:[{id:'t1',artistName:'A',title:'Private A',personalRank:1,links:[],releaseDate:'2026-09-30',reason:'A',lane:0,preview:{kind:'provider-embed',embedUrl:'https://bandcamp.com/EmbeddedPlayer/track=123/'}}]}}];
     renderPrivateDashboard();assert.match(window.document.querySelector('#app').textContent,/Private A/);
+    const frame=window.document.querySelector('iframe');assert.ok(frame);
+    privateDrops.loading=true;renderPrivateDashboard();assert.equal(window.document.querySelector('iframe'),frame);
+    personal.feedback={'t1:saved':{track_id:'t1',kind:'saved',value:true,updated_at:new Date().toISOString()}};
+    renderPrivateDashboard();assert.equal(window.document.querySelector('iframe'),frame);
+    assert.equal(window.document.querySelector('[data-personal-kind=saved]').textContent,'Saved ✓');
+    privateDrops.drops=[
+      {id:'11111111-1111-4111-8111-111111111113',kind:'one_time',status:'queued',created_at:'2026-10-01T20:00:00Z',scheduled_at:'2026-10-02T02:00:00Z'},
+      {id:'11111111-1111-4111-8111-111111111114',kind:'one_time',status:'queued',created_at:'2026-10-02T11:00:00Z',scheduled_at:'2026-10-02T13:00:00Z'}
+    ];renderPrivateDashboard();
+    assert.match(window.document.querySelector('#app .private-queue').textContent,/8:00 AM/);
+    assert.doesNotMatch(window.document.querySelector('#app .private-queue').textContent,/9:00 PM/);
     personal.user={id:b,email:'b@example.com'};privateDrops.owner=b;privateDrops.drops=[];renderPrivateDashboard();
     assert.doesNotMatch(window.document.querySelector('#app').textContent,/Private A/);
+    const {setPrivateAvailability}=await import('../DROP_PORTAL_PHASE1_CODEBASE_2026-09-21/dist/personal-dashboard.js');
+    setPrivateAvailability('setup_required');renderPrivateDashboard();
+    assert.match(window.document.querySelector('#app').textContent,/portal is being prepared/);
+    assert.equal(window.document.querySelector('#tuner').hidden,true);
+    setPrivateAvailability('ready');
   }finally{delete globalThis.window;delete globalThis.document;delete globalThis.location;}
 });

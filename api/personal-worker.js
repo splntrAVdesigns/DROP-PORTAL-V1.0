@@ -43,7 +43,15 @@ async function catalog(){
   }));
 }
 export async function runPersonalWorker(client,{now=new Date(),catalogLoader=catalog,limit=20}={}){
-  const due=now.toISOString(),summary={queued:0,ready:0,needsResearch:0,errors:[]};
+  const due=now.toISOString(),summary={queued:0,ready:0,needsResearch:0,recovered:0,errors:[]};
+  const staleBefore=new Date(+now-5*60000).toISOString();
+  const stalled=await client.from('dp_personal_drops').select('id,attempts,updated_at').eq('status','running').lt('updated_at',staleBefore).limit(limit);if(stalled.error)fail(stalled.error);
+  for(const job of stalled.data){
+    const recovered=await client.from('dp_personal_drops').update({status:job.attempts>=3?'needs_research':'queued',
+      status_detail:job.attempts>=3?'Processing interrupted three times. Please contact support.':'Interrupted processing recovered; retrying.',updated_at:due})
+      .eq('id',job.id).eq('status','running').eq('attempts',job.attempts).eq('updated_at',job.updated_at).select('id');
+    if(recovered.error)fail(recovered.error);summary.recovered+=recovered.data.length;if(job.attempts>=3)summary.needsResearch+=recovered.data.length;
+  }
   const schedules=await client.from('dp_personal_plans').select('*').lte('next_drop_at',due).order('next_drop_at').limit(limit);if(schedules.error)fail(schedules.error);
   for(const plan of schedules.data){
     try{
@@ -61,19 +69,19 @@ export async function runPersonalWorker(client,{now=new Date(),catalogLoader=cat
   let releases=null;
   for(const job of jobs.data){
     try{
-      const claim=await client.from('dp_personal_drops').update({status:'running',attempts:job.attempts+1,updated_at:due}).eq('id',job.id).eq('status','queued').select('id');
+      const claim=await client.from('dp_personal_drops').update({status:'running',attempts:job.attempts+1,updated_at:due}).eq('id',job.id).eq('status','queued').eq('attempts',job.attempts).select('id');
       if(claim.error)fail(claim.error);if(!claim.data?.length)continue;
       releases??=await catalogLoader();
       const f=await client.from('dp_feedback').select('track_id,kind,value').eq('user_id',job.user_id);if(f.error)fail(f.error);
       const selection=curatePersonalDrop(releases,job.profile_snapshot,f.data,new Date(job.scheduled_at));
       const saved=await client.from('dp_personal_drops').update({status:selection.status,result:selection.result||null,status_detail:selection.detail||null,updated_at:new Date().toISOString()})
-        .eq('id',job.id).eq('status','running');if(saved.error)fail(saved.error);
-      if(selection.status==='ready')summary.ready++;else summary.needsResearch++;
+        .eq('id',job.id).eq('status','running').eq('attempts',job.attempts+1).select('id');if(saved.error)fail(saved.error);
+      if(saved.data.length){if(selection.status==='ready')summary.ready++;else summary.needsResearch++;}
     }catch(e){
       summary.errors.push('drop:'+String(e.message).slice(0,90));
       await client.from('dp_personal_drops').update({status:job.attempts>=2?'needs_research':'queued',
         status_detail:job.attempts>=2?'Research source unavailable after three attempts.':'Research source temporarily unavailable; retrying.',
-        updated_at:new Date().toISOString()}).eq('id',job.id).eq('status','running');
+        updated_at:new Date().toISOString()}).eq('id',job.id).eq('status','running').eq('attempts',job.attempts+1);
     }
   }
   return summary;
@@ -87,7 +95,8 @@ export default async function handler(req,res){
   if(!process.env.SUPABASE_SERVICE_ROLE_KEY||!process.env.SUPABASE_URL)return reply(res,503,{message:'Private worker storage is not configured.'});
   try{
     const client=createClient(process.env.SUPABASE_URL,process.env.SUPABASE_SERVICE_ROLE_KEY,
-      {auth:{persistSession:false,autoRefreshToken:false}});
-    return reply(res,200,await runPersonalWorker(client));
+      {auth:{persistSession:false,autoRefreshToken:false},global:{fetch:(url,options)=>fetch(url,{...options,signal:AbortSignal.timeout(12000)})}});
+    const summary=await runPersonalWorker(client);
+    return reply(res,summary.errors.length?503:200,summary);
   }catch(e){return reply(res,503,{message:'Private worker failed; queued requests remain visible.'});}
 }

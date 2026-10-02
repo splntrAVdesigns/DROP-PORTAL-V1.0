@@ -1,12 +1,12 @@
 import {personal,loadPersonal,personalInteractions,setPersonalFeedback} from './personal.js';
-import {renderPrivateDashboard,setupPrivateDashboard,enablePrivateDashboard} from './personal-dashboard.js';
+import {renderPrivateDashboard,setupPrivateDashboard,enablePrivateDashboard,setPrivateAvailability} from './personal-dashboard.js';
 import{mergeInteractions,updateInteraction}from'./interactions.js';
 import{lanes,tracks,drops,mixes,defaults,getFeedProfile,getDropMixes}from'./data.js';import{read,write}from'./storage.js';import*as player from'./player.js';import{loadWeeklyFeed,feedState}from'./feed.js';import{destinations,primaryListen,primaryBuy,directPreview,embedPreview,formatReleaseDate}from'./destinations.js';import{scheduleState,loadSchedule,formatNextDrop,scheduleLabel}from'./schedule.js';
 import{openTuner,setupTuner,usePrivateTuner}from'./tuner.js';
 import{pipelineState,loadPipelineStatus,preflightLabel}from'./pipeline-client.js';
 import{heroMarkup,initHero,paletteMarkup}from'./hero.js';
 import{createFeedRefresh}from'./feed-refresh.js';
-const BUILD_ID='P3C3-private-drops-2026-10-01';let privateMode=null;window.__DROP_PORTAL_BUILD__=BUILD_ID;
+const BUILD_ID='P3C31-private-reliability-2026-10-02';let privateMode=null;window.__DROP_PORTAL_BUILD__=BUILD_ID;
 const heroStyles=document.createElement('link');heroStyles.rel='stylesheet';heroStyles.href='/hero.css';document.head.append(heroStyles);
 document.addEventListener('click',event=>{const link=event.target.closest?.('a[data-external]');if(!link)return;event.preventDefault();event.stopImmediatePropagation();const popup=window.open('','_blank');if(popup){popup.opener=null;popup.location.replace(link.href)}else window.location.assign(link.href)},true);
 const $=s=>document.querySelector(s);let interactions=read('interactions',{}),profiles=read('profiles',{base:{...defaults},weekly:null}),layout=read('layout',[{id:'start',size:'standard'},{id:'signal',size:'compact'},{id:'lane0',size:'wide'},{id:'lane1',size:'wide'},{id:'lane2',size:'wide'},{id:'lane3',size:'standard'},{id:'mix',size:'standard'}]);let editing=false,mobileEditing=false,filter='all',detailId=null,dragged=null;const defaultLayout=JSON.parse(JSON.stringify([{id:'start',size:'standard'},{id:'signal',size:'compact'},{id:'lane0',size:'wide'},{id:'lane1',size:'wide'},{id:'lane2',size:'wide'},{id:'lane3',size:'standard'},{id:'mix',size:'standard'}]));
@@ -131,7 +131,7 @@ window.addEventListener('focus',refreshAll);document.addEventListener('visibilit
 window.setInterval(refreshAll,60000);
 for(const d of document.querySelectorAll('dialog'))d.addEventListener('close',()=>refresh.flush());
 document.addEventListener('click',()=>queueMicrotask(()=>refresh.flush()));
-setupPrivateDashboard();render();loadPersonal();fetch('/api/personal-feature',{cache:'no-store'}).then(r=>r.ok?r.json():{active:false}).catch(()=>({active:false})).then(({active})=>{privateMode=active===true;if(privateMode){usePrivateTuner();enablePrivateDashboard();render();}else Promise.all([loadWeeklyFeed(),loadSchedule(),loadPipelineStatus()]).then(()=>render());});
+setupPrivateDashboard();usePrivateTuner();setPrivateAvailability('checking');render();loadPersonal();fetch('/api/personal-feature',{cache:'no-store',signal:AbortSignal.timeout(12000)}).then(r=>{if(!r.ok)throw Error('Feature check failed');return r.json();}).then(({active})=>{privateMode=true;setPrivateAvailability(active===true?'ready':'setup_required');if(active===true)enablePrivateDashboard();render();}).catch(()=>{privateMode=true;setPrivateAvailability('unavailable');render();});
 
 window.addEventListener('storage',event=>{
   if(personal.user||event.key!=='drop-portal:interactions')return;

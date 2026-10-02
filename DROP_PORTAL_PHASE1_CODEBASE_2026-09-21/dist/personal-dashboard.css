@@ -24,3 +24,9 @@ main#app{max-width:1440px;min-height:calc(100vh - 110px);padding:30px clamp(18px
 .private-plan-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.private-plan-row label{min-width:0;font-size:12px}.private-plan button{margin:10px 0 0;width:100%}
 .personal-taste>.notice,.personal-taste .notice{background:#283338;border-color:#53636a}.personal-taste input:not([type=range]):not([type=checkbox]),.personal-taste select{background:#1b2529}
 @media(max-width:650px){header{padding:18px;flex-wrap:wrap}header nav{width:100%;gap:22px;order:3}main#app{padding:16px 16px 80px}.private-plan-row{grid-template-columns:1fr}}
+/* Personal scheduling keeps one neutral surface behind cyan actions. */
+#tuner-dialog{background:#24292d;color:#edf2f4}
+#personal-tuner .personal-taste .notice{background:#30363b;border-color:#505c64}
+#personal-tuner .tuner-save{margin-top:12px}
+#personal-tuner .focus-chips button:disabled{opacity:.5;cursor:not-allowed}
+#personal-tuner .private-plan{padding-bottom:12px}

@@ -45,7 +45,13 @@ export function makePersonalDataHandler(deps={}){
         let profile;try{profile=cleanPersonalProfile(body.profile);}catch(e){return personalReply(res,400,{message:e.message});}
         if(profile.focus.mode!=='recent')return personalReply(res,422,{message:'Archive and Future source coverage is still being validated.'});
         if(body.scope==='base')state.base_profile=profile;
-        else {if(!validDate(body.targetDate)||body.targetDate<localDate(new Date()))return personalReply(res,400,{message:'Choose the current or a future drop date.'});state.weekly_profile=profile;state.target_date=body.targetDate;}
+        else {
+          const plan=await client.from('dp_personal_plans').select('next_drop_at').eq('user_id',user.id).maybeSingle();checkDatabase(plan.error);
+          if(!plan.data)return personalReply(res,409,{message:'Save a weekly plan first so this taste has a scheduled target.'});
+          const target=localDate(plan.data.next_drop_at);
+          if(body.targetDate!==target||target<localDate(new Date()))return personalReply(res,409,{message:'Your weekly target changed. Reload the plan before saving this week’s taste.'});
+          state.weekly_profile=profile;state.target_date=target;
+        }
       }
       if(body.scope==='clear-weekly'){state.weekly_profile=null;state.target_date=null;}
       if(body.scope==='learning'){if(typeof body.enabled!=='boolean')return personalReply(res,400,{message:'Choose a learning setting.'});state.learning_enabled=body.enabled;}

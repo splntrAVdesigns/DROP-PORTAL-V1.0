@@ -9,14 +9,17 @@ concurrency:
   cancel-in-progress: false
 jobs:
   run:
-    if: ${{ vars.DROP_PORTAL_PERSONAL_WORKER_ENABLED == 'true' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ vars.DROP_PORTAL_PERSONAL_WORKER_ENABLED != 'false' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     steps:
       - name: Process due private drops
         env:
           WORKER_SECRET: ${{ secrets.DROP_PORTAL_WORKER_SECRET }}
         run: |
-          test -n "$WORKER_SECRET"
-          curl --fail --silent --show-error --max-time 40 \
+          if [ ${#WORKER_SECRET} -lt 32 ]; then
+            echo "::error::Add DROP_PORTAL_WORKER_SECRET in repository Actions secrets. It must match the Vercel worker secret and contain at least 32 characters."
+            exit 1
+          fi
+          curl --fail-with-body --silent --show-error --max-time 75 \
             -X POST -H "Authorization: Bearer $WORKER_SECRET" \
             https://drop-portal-v1-0.vercel.app/api/personal-worker
