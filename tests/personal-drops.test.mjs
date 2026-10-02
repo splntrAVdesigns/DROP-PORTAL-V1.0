@@ -138,7 +138,13 @@ test('private dashboard gates the board and shows only the signed-in account dro
     assert.equal(window.document.querySelector('#edit').hidden,false);
     privateDrops.drops=[{id:'11111111-1111-4111-8111-111111111112',kind:'one_time',status:'ready',result:{note:'Verified catalog',tracks:[{id:'t1',artistName:'A',title:'Private A',personalRank:1,links:[],releaseDate:'2026-09-30',reason:'A',lane:0,preview:{kind:'provider-embed',embedUrl:'https://bandcamp.com/EmbeddedPlayer/track=123/'}}]}}];
     renderPrivateDashboard();assert.match(window.document.querySelector('#app').textContent,/Private A/);
+    assert.ok(window.document.querySelector('[data-personal-preview]'));
+    const {playPersonalPreview}=await import('../DROP_PORTAL_PHASE1_CODEBASE_2026-09-21/dist/personal-listening.js');
+    await playPersonalPreview('t1');
     const frame=window.document.querySelector('iframe');assert.ok(frame);
+    assert.ok(window.document.querySelector('.personal-top-three'));
+    assert.ok(window.document.querySelector('.personal-remaining'));
+    assert.match(window.document.querySelector('.private-lane-key').textContent,/Future/);
     window.document.querySelector('#edit').click();
     assert.equal(window.document.querySelector('#edit').getAttribute('aria-expanded'),'true');
     window.document.querySelector('[data-layout-panel="queue"]').click();
@@ -156,6 +162,7 @@ test('private dashboard gates the board and shows only the signed-in account dro
     assert.doesNotMatch(window.document.querySelector('#app .private-queue').textContent,/9:00 PM/);
     personal.user={id:b,email:'b@example.com'};privateDrops.owner=b;privateDrops.drops=[];renderPrivateDashboard();
     assert.doesNotMatch(window.document.querySelector('#app').textContent,/Private A/);
+    assert.equal(window.document.querySelector('iframe'),null,'account changes unload the private preview');
     assert.equal(window.document.querySelector('.private-queue').classList.contains('wide'),true,'account B starts with its own layout');
     personal.user={id:a,email:'a@example.com'};privateDrops.owner=a;renderPrivateDashboard();
     assert.equal(window.document.querySelector('.private-queue').classList.contains('compact'),true,'account A retains its layout');

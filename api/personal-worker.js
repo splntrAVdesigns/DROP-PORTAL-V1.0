@@ -1,8 +1,7 @@
 import {createClient} from '@supabase/supabase-js';
-import {timingSafeEqual} from 'node:crypto';
+import {timingSafeEqual,randomUUID} from 'node:crypto';
 import {gh} from '../lib/repository.js';
 import {nextPersonalOccurrence,curatePersonalDrop} from '../lib/personal-discovery.js';
-import {localDate} from '../lib/contracts.js';
 
 const reply=(res,status,data)=>{res.setHeader('Cache-Control','no-store');return res.status(status).json(data);};
 const fail=error=>{throw Error(error?.message||'Personal worker storage error');};
@@ -43,27 +42,23 @@ async function catalog(){
   }));
 }
 export async function runPersonalWorker(client,{now=new Date(),catalogLoader=catalog,limit=20}={}){
-  const due=now.toISOString(),summary={queued:0,ready:0,needsResearch:0,recovered:0,errors:[]};
+  const due=now.toISOString(),summary={queued:0,ready:0,needsResearch:0,recovered:0,failed:0,errors:[]};
   const staleBefore=new Date(+now-5*60000).toISOString();
   const stalled=await client.from('dp_personal_drops').select('id,attempts,updated_at').eq('status','running').lt('updated_at',staleBefore).limit(limit);if(stalled.error)fail(stalled.error);
   for(const job of stalled.data){
-    const recovered=await client.from('dp_personal_drops').update({status:job.attempts>=3?'needs_research':'queued',
+    const recovered=await client.from('dp_personal_drops').update({status:job.attempts>=3?'failed':'queued',
       status_detail:job.attempts>=3?'Processing interrupted three times. Please contact support.':'Interrupted processing recovered; retrying.',updated_at:due})
       .eq('id',job.id).eq('status','running').eq('attempts',job.attempts).eq('updated_at',job.updated_at).select('id');
-    if(recovered.error)fail(recovered.error);summary.recovered+=recovered.data.length;if(job.attempts>=3)summary.needsResearch+=recovered.data.length;
+    if(recovered.error)fail(recovered.error);summary.recovered+=recovered.data.length;if(job.attempts>=3)summary.failed+=recovered.data.length;
   }
   const schedules=await client.from('dp_personal_plans').select('*').lte('next_drop_at',due).order('next_drop_at').limit(limit);if(schedules.error)fail(schedules.error);
   for(const plan of schedules.data){
     try{
-      const profile=await client.from('dp_personal_profiles').select('*').eq('user_id',plan.user_id).single();if(profile.error)fail(profile.error);
-      const date=localDate(plan.next_drop_at);
-      const snapshot=profile.data.weekly_profile&&profile.data.target_date===date?profile.data.weekly_profile:profile.data.base_profile;
-      const insert=await client.from('dp_personal_drops').upsert({user_id:plan.user_id,kind:'weekly',scheduled_at:plan.next_drop_at,profile_snapshot:snapshot},{onConflict:'user_id,kind,scheduled_at',ignoreDuplicates:true});if(insert.error)fail(insert.error);
-      const next=nextPersonalOccurrence(plan.weekday,String(plan.local_time).slice(0,5),new Date(plan.next_drop_at));
-      const advanced=await client.from('dp_personal_plans').update({next_drop_at:next.toISOString(),revision:plan.revision+1,updated_at:due})
-        .eq('user_id',plan.user_id).eq('revision',plan.revision).eq('next_drop_at',plan.next_drop_at);if(advanced.error)fail(advanced.error);
-      summary.queued++;
-    }catch(e){summary.errors.push('schedule:'+String(e.message).slice(0,90));}
+      const next=nextPersonalOccurrence(plan.weekday,String(plan.local_time).slice(0,5),now);
+      const queued=await client.rpc('dp_queue_due_weekly',{p_user:plan.user_id,p_revision:plan.revision,
+        p_at:plan.next_drop_at,p_next:next.toISOString()});if(queued.error)fail(queued.error);
+      if(queued.data)summary.queued++;
+    }catch(e){summary.errors.push('Weekly queue transaction failed.');}
   }
   const jobs=await client.from('dp_personal_drops').select('*').eq('status','queued').lte('scheduled_at',due).order('scheduled_at').limit(limit);if(jobs.error)fail(jobs.error);
   let releases=null;
@@ -78,10 +73,12 @@ export async function runPersonalWorker(client,{now=new Date(),catalogLoader=cat
         .eq('id',job.id).eq('status','running').eq('attempts',job.attempts+1).select('id');if(saved.error)fail(saved.error);
       if(saved.data.length){if(selection.status==='ready')summary.ready++;else summary.needsResearch++;}
     }catch(e){
-      summary.errors.push('drop:'+String(e.message).slice(0,90));
-      await client.from('dp_personal_drops').update({status:job.attempts>=2?'needs_research':'queued',
+      summary.errors.push('Drop processing failed.');
+      if(job.attempts>=2)summary.failed++;
+      const recovery=await client.from('dp_personal_drops').update({status:job.attempts>=2?'failed':'queued',
         status_detail:job.attempts>=2?'Research source unavailable after three attempts.':'Research source temporarily unavailable; retrying.',
         updated_at:new Date().toISOString()}).eq('id',job.id).eq('status','running').eq('attempts',job.attempts+1);
+      if(recovery.error)summary.errors.push('Drop recovery failed.');
     }
   }
   return summary;
@@ -96,7 +93,13 @@ export default async function handler(req,res){
   try{
     const client=createClient(process.env.SUPABASE_URL,process.env.SUPABASE_SERVICE_ROLE_KEY,
       {auth:{persistSession:false,autoRefreshToken:false},global:{fetch:(url,options)=>fetch(url,{...options,signal:AbortSignal.timeout(12000)})}});
-    const summary=await runPersonalWorker(client);
+    const runId=randomUUID();
+    const started=await client.rpc('dp_start_worker_run',{p_id:runId});if(started.error)fail(started.error);
+    let summary;
+    try{summary=await runPersonalWorker(client);}catch(error){
+      await client.from('dp_worker_runs').update({finished_at:new Date().toISOString(),outcome:'failed'}).eq('id',runId);throw error;
+    }
+    const finished=await client.from('dp_worker_runs').update({finished_at:new Date().toISOString(),outcome:summary.errors.length?'failed':'success'}).eq('id',runId);if(finished.error)fail(finished.error);
     return reply(res,summary.errors.length?503:200,summary);
   }catch(e){return reply(res,503,{message:'Private worker failed; queued requests remain visible.'});}
 }

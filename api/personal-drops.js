@@ -12,13 +12,19 @@ export function makePersonalDropsHandler(deps={}){
     if((req.method==='POST'||req.headers['x-personal-account'])&&req.headers['x-personal-account']!==user.id)
       return personalReply(res,409,{message:'Account changed. Reload before continuing.'});
     if(req.method==='GET'){
-      const [plan,drops]=await Promise.all([
+      const [plan,drops,health]=await Promise.all([
         client.from('dp_personal_plans').select('*').eq('user_id',user.id).maybeSingle(),
-        client.from('dp_personal_drops').select('*').eq('user_id',user.id).order('scheduled_at',{ascending:false}).limit(30)
-      ]);checkDatabase(plan.error);checkDatabase(drops.error);
-      return personalReply(res,200,{plan:plan.data,drops:drops.data});
+        client.from('dp_personal_drops').select('*').eq('user_id',user.id).order('scheduled_at',{ascending:false}).limit(30),
+        client.rpc('dp_worker_health')
+      ]);checkDatabase(plan.error);checkDatabase(drops.error);checkDatabase(health.error);
+      return personalReply(res,200,{plan:plan.data,drops:drops.data,health:health.data});
     }
     const body=personalBody(req);
+    if(body.action==='retry-drop'){
+      if(typeof body.id!=='string'||! /^[0-9a-f-]{36}$/i.test(body.id))return personalReply(res,400,{message:'Choose a valid drop.'});
+      const retried=await client.rpc('dp_retry_personal_drop',{p_id:body.id});checkDatabase(retried.error);
+      return personalReply(res,200,{drop:retried.data[0]});
+    }
     const {data:state,error:readError}=await client.from('dp_personal_profiles').select('*').eq('user_id',user.id).maybeSingle();checkDatabase(readError);
     if(body.action==='save-plan'){
       if(!Number.isSafeInteger(body.expectedRevision)||body.expectedRevision!==(state?.revision||0))

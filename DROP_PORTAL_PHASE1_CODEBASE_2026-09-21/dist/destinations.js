@@ -75,7 +75,7 @@ export function directPreview(item){
 export function embedPreview(item){
   const preview=item?.preview;
   if(preview?.kind==='provider-embed'&&externalUrl(preview.embedUrl)){
-    const provider=preview.provider||'AUTHORIZED PROVIDER';
+    const provider=preview.provider||providerFor(new URL(preview.embedUrl));
     const url=normalizeEmbedUrl(preview.embedUrl,provider);
     if(url)return{url,provider};
   }

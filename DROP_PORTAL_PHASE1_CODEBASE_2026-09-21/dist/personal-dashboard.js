@@ -1,6 +1,8 @@
 import {personal,sendCode,verifyCode,setPersonalFeedback,signOut,personalInteractions} from './personal.js';
-import {privateDrops,loadPrivateDrops} from './personal-drops-client.js';
-import {formatReleaseDate} from './destinations.js';
+import {privateDrops,loadPrivateDrops,retryPrivateDrop} from './personal-drops-client.js';
+import {syncPersonalListening,setupPersonalListening,updatePersonalListening} from './personal-listening.js';
+import {personalSignal,signalLanes} from './personal-signal.js';
+import {formatReleaseDate,directPreview,embedPreview,primaryListen,primaryBuy} from './destinations.js';
 import {heroMarkup,initHero,stopHero} from './hero.js';
 import {read,write} from './storage.js';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -26,30 +28,31 @@ function panelControls(key){return editing?`<div class="private-panel-controls">
 export function setPrivateAvailability(value){availability=value;}
 export function enablePrivateDashboard(){enabled=true;if(personal.user)loadPrivateDrops();}
 const dateLabel=v=>v?new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'}).format(new Date(v)):'Not scheduled';
-function trustedEmbed(value){
-  try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password&&!u.port&&(
-    u.hostname==='bandcamp.com'&&u.pathname.startsWith('/EmbeddedPlayer/')||
-    u.hostname==='w.soundcloud.com'&&u.pathname.startsWith('/player/')||
-    u.hostname==='www.mixcloud.com'&&u.pathname.startsWith('/widget/'));}catch{return false;}
-}
 function track(t,feedback){
-  const preview=t.preview;
-  let player='<span class="private-no-preview">Preview unavailable</span>';
-  if(preview?.kind==='provider-embed'&&trustedEmbed(preview.embedUrl))player=`<iframe loading="lazy" title="Preview ${esc(t.artistName)} — ${esc(t.title)}" src="${esc(preview.embedUrl)}" allow="autoplay" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>`;
-  else if(preview?.kind==='direct-audio'&&/^(https:\/\/|\/)/.test(preview.previewUrl))player=`<audio controls preload="none" src="${esc(preview.previewUrl)}"></audio>`;
-  const listen=t.links?.find(l=>l.kind==='listen'||l.kind==='buy')||t.links?.[0];
-  return `<article class="personal-track"><div class="personal-track-head"><span class="eyebrow">${String(t.personalRank).padStart(2,'0')} / ${esc(t.subgenre||'DRUM & BASS')}</span><span>${esc(formatReleaseDate(t.releaseDate))}</span></div>
+  const direct=directPreview(t),embed=embedPreview(t);
+  const playable=(direct&&!direct.previewUrl.startsWith('//'))||embed;
+  const player=playable?`<button data-personal-preview="${esc(t.id)}" aria-pressed="false" aria-label="Open preview of ${esc(t.title)}"><span aria-hidden="true">▶</span> LISTEN · ${esc(direct?.provider||embed?.provider||'PREVIEW')}</button>`:'<span class="private-no-preview">Preview unavailable · use source link</span>';
+  const listen=primaryListen(t)||primaryBuy(t);
+  return `<article class="personal-track"><div class="personal-track-head"><span class="eyebrow">${String(t.personalRank||'—').padStart(2,'0')} / ${esc(t.subgenre||'DRUM & BASS')}</span><span>${esc(formatReleaseDate(t.releaseDate))}</span></div>
     <h3>${esc(t.title)}</h3><p>${esc(t.artistName)} · ${esc(t.label||'Label unverified')}</p><div class="private-preview">${player}</div>
-    <p>${esc(t.personalReason)} · ${esc(t.reason)}</p><div class="private-actions">${listen?`<a href="${esc(listen.url)}" target="_blank" rel="noopener noreferrer">Listen / details ↗</a>`:''}
+    <p>${esc(t.personalReason||'Verified catalog match')} · ${esc(t.reason||'Verified release')}</p><div class="private-actions">${listen?`<a href="${esc(listen.url)}" target="_blank" rel="noopener noreferrer">Listen / details ↗</a>`:''}
     <button data-personal-track="${esc(t.id)}" data-personal-kind="saved" aria-pressed="${!!feedback[t.id]?.saved}">${feedback[t.id]?.saved?'Saved ✓':'Save'}</button>
     <button data-personal-track="${esc(t.id)}" data-personal-kind="heard" aria-pressed="${!!feedback[t.id]?.heard}">${feedback[t.id]?.heard?'Heard ✓':'Mark heard'}</button></div></article>`;
 }
+
+function icon(kind){const paths={signal:'M3 15v-4m5 4V6m5 9V3m5 12V8',schedule:'M4 5h14v13H4zM7 2v5m8-5v5M4 9h14m-9 3v3h3',crate:'M3 6h16v12H3zM7 6V3h8v3m-7 5h6',top:'M5 17 17 5M7 5h10v10'};return `<svg class="private-section-icon" viewBox="0 0 22 22" aria-hidden="true"><path d="${paths[kind]}"/></svg>`;}
+function signalMarkup(signal){
+ if(!signal.total)return '<p class="private-signal-empty">Your genre breakdown appears with your first completed dig.</p>';
+ const p=signal.profile;
+ return `<div class="private-signal"><div class="private-signal-stats"><span><strong>${signal.total}</strong> VERIFIED PICKS</span><span><strong>${signal.artistMatches}</strong> ARTIST MATCHES</span><span><strong>${signal.labelMatches}</strong> LABEL MATCHES</span></div><div class="private-distribution" role="img" aria-label="${esc(signal.counts.map((c,i)=>signalLanes[i]+': '+c).join(', '))}">${signal.counts.map((c,i)=>c?`<span class="signal-lane-${i}" style="flex:${c}" title="${esc(signalLanes[i])}: ${c}"></span>`:'').join('')}</div><div class="private-lane-key">${signal.counts.map((c,i)=>c?`<span><i class="signal-lane-${i}"></i>${esc(signalLanes[i])} <b>${c}</b></span>`:'').join('')}</div><details class="private-match-details"><summary>Why this dig matches your taste</summary><p>Actual selected-track distribution, using the taste snapshot saved with this dig.</p>${p?`<p>Lane priorities · Future ${p.future} / Deep ${p.deep} / Jungle ${p.jungle}. Discovery depth ${p.depth}; experimental bias ${p.experimental}. Release window ${esc({'1mo':'1 month','3mo':'3 months','6mo':'6 months','1yr':'1 year'}[p.searchPast]||p.searchPast)}.</p>`:'<p>No saved taste snapshot is available for this result.</p>'}<p>Preferred artist matches: ${signal.artistMatches}. Preferred label matches: ${signal.labelMatches}. These counts may overlap. Each card shows its own selection reason. Floor, darkness, and break density await verified audio analysis.</p></details></div>`;
+}
+
 function paintDashboard(app,markup,feedback){
   const owner=personal.user?.id||'';
   const temp=document.createElement('div');temp.innerHTML=markup;
   const oldResults=app.querySelector('.personal-results'),newResults=temp.querySelector('.personal-results');
   const oldHero=app.querySelector('.ascii-hero'),newHero=temp.querySelector('.ascii-hero');
-  const signature=node=>{if(!node)return '';const copy=node.cloneNode(true);copy.querySelectorAll('[data-personal-track]').forEach(b=>{b.textContent='';b.removeAttribute('aria-pressed');});copy.querySelectorAll('.private-panel-controls').forEach(n=>n.remove());return copy.innerHTML;};
+  const signature=node=>{if(!node)return '';const copy=node.cloneNode(true);copy.querySelectorAll('[data-personal-track]').forEach(b=>{b.textContent='';b.removeAttribute('aria-pressed');});copy.querySelectorAll('[data-personal-preview]').forEach(b=>b.removeAttribute('aria-pressed'));copy.querySelectorAll('.private-panel-controls').forEach(n=>n.remove());return copy.innerHTML;};
   if(app.dataset.owner===owner&&oldResults&&newResults&&signature(oldResults)===signature(newResults)){
     // Keep the live media subtree attached. Update surrounding status and feedback only.
     for(const child of [...app.children])if(child!==oldResults&&child!==oldHero)child.remove();
@@ -64,12 +67,15 @@ function paintDashboard(app,markup,feedback){
     });
   }else app.innerHTML=markup;
   app.dataset.owner=owner;
+  updatePersonalListening();
   const canvas=app.querySelector('#ascii-hero-canvas');
   if(canvas!==heroCanvas){stopHero();heroCanvas=canvas;if(canvas&&typeof canvas.getContext==='function'&&typeof IntersectionObserver!=='undefined'&&typeof ResizeObserver!=='undefined')initHero();}
 }
 export function renderPrivateDashboard(){
   const app=document.querySelector('#app');if(!app)return;
   const layout=personalLayout();
+  const readyOwner=personal.checked&&availability==='ready'&&personal.user?.id===privateDrops.owner?personal.user.id:null;
+  syncPersonalListening(readyOwner,readyOwner?privateDrops.drops.filter(d=>d.status==='ready').flatMap(d=>d.result?.tracks||[]):[]);
   const nav=document.querySelector('header nav');if(nav)nav.hidden=!personal.user;
   const tuner=document.querySelector('#tuner');if(tuner)tuner.hidden=!personal.user;
   const path=location.pathname.replace(/\/$/,'')||'/';
@@ -94,7 +100,7 @@ export function renderPrivateDashboard(){
   const current=privateDrops.drops.find(d=>d.status==='ready')||null;
   const feedback=personalInteractions();
   const savedCount=document.querySelector('#saved-count');if(savedCount)savedCount.textContent=Object.values(feedback).filter(v=>v.saved).length;
-  const headline=`<div class="personal-hero"><span class="eyebrow">MY DROP / ${esc(personal.user.email)}</span><button data-private-signout>Sign out</button><h1>Your signal.</h1><p>Next weekly dig · ${esc(dateLabel(privateDrops.plan?.next_drop_at))}</p><button data-open-personal-tuner class="primary">TUNE + SCHEDULE</button>${message?`<p role="status">${esc(message)}</p>`:''}<p class="private-status">${privateDrops.error?esc(privateDrops.error):privateDrops.plan?'Weekly plan saved. Your drop appears here after processing. The worker checks approximately every 15 minutes.':'Set your taste and weekly time to arm your first drop.'}</p></div>`;
+  const headline=`<div class="personal-hero"><span class="eyebrow">MY DROP / ${esc(personal.user.email)}</span><button data-private-signout>Sign out</button><h1>${icon("signal")} Your signal</h1><p class="private-next">Next weekly dig · ${esc(dateLabel(privateDrops.plan?.next_drop_at))}</p><button data-open-personal-tuner class="primary">TUNE + SCHEDULE</button>${message?`<p role="status">${esc(message)}</p>`:''}<p class="private-status">${privateDrops.error?esc(privateDrops.error):privateDrops.plan?'Weekly plan saved. Scheduled times are due times; processing may arrive later.':'Set your taste and weekly time to arm your first drop.'}</p></div>`;
   // Older server deployments may still return several unfinished one-time jobs.
   // Show only the most recently requested one until replacement is migrated.
   const activeOneTime=privateDrops.drops.filter(d=>d.kind==='one_time'&&d.status!=='ready'&&d.status!=='superseded')
@@ -111,13 +117,14 @@ export function renderPrivateDashboard(){
   }
   const requested=location.hash.match(/^#drop=([0-9a-f-]{36})$/)?.[1];
   const drop=(requested&&history.find(d=>d.id===requested&&d.status==='ready'))||current;
+  const signal=personalSignal(drop);
   const pending=history.filter(d=>d.status!=='ready');
-  paintDashboard(app,heroMarkup()+headline+`<section class="private-queue ${layout.sizes.queue}" style="order:${layout.order.indexOf('queue')+2}">${panelControls('queue')}<h2>Upcoming & research status</h2>${pending.length?pending.map(d=>`<p><b>${d.kind==='one_time'?'ONE TIME DIG':'WEEKLY DIG'}</b> · ${esc(dateLabel(d.scheduled_at))} · ${esc(d.status.replaceAll('_',' '))}${d.status_detail?' · '+esc(d.status_detail):''}</p>`).join(''):'<p>No one-time digs queued.</p>'}</section>
-  <section class="personal-results ${layout.sizes.results}" style="order:${layout.order.indexOf('results')+2}">${panelControls('results')}<span class="eyebrow">${drop?'VERIFIED CATALOG SELECTION':'WAITING FOR YOUR FIRST DROP'}</span><h2>${drop?.kind==='one_time'?'One Time Dig':'My weekly drop'}</h2>
-  ${drop?`<p>${esc(drop.result.note)}</p><h3>Start here · Top 3</h3><p>${drop.result.tracks.slice(0,3).map(t=>esc(t.artistName)+' — '+esc(t.title)).join(' · ')}</p><div class="personal-tracks">${drop.result.tracks.map(t=>track(t,feedback)).join('')}</div>`:'<p>Save a personal weekly plan or queue a One Time Dig in the Tuner. Results are visible only to your account.</p>'}</section>`,feedback);
+  paintDashboard(app,heroMarkup()+headline.replace('class="personal-hero"',`class="personal-hero" style="order:${layout.order.indexOf('queue')+2}"`).replace('</div>',signalMarkup(signal)+'</div>')+`<section class="private-queue ${layout.sizes.queue}" style="order:${layout.order.indexOf('queue')+2}">${panelControls('queue')}<h2>${icon("schedule")} Upcoming & research status</h2><p class="private-heartbeat">Last successful worker check · ${esc(dateLabel(privateDrops.health?.lastSuccessAt))}</p>${privateDrops.plan?`<p class="private-weekly-time"><b>WEEKLY DIG</b> · ${esc(dateLabel(privateDrops.plan.next_drop_at))} · scheduled</p>`:''}${pending.length?pending.map(d=>`<p><b>${d.kind==='one_time'?'ONE TIME DIG':'WEEKLY DIG'}</b> · ${esc(dateLabel(d.scheduled_at))} · ${esc(d.status==='queued'&&Date.now()-Date.parse(d.scheduled_at)>20*60000?'overdue · awaiting worker':d.status.replaceAll('_',' '))}${d.status_detail?' · '+esc(d.status_detail):''}${['failed','needs_research'].includes(d.status)?` <button data-retry-drop="${esc(d.id)}">RETRY DIG</button>`:''}</p>`).join(''):'<p>No one-time digs queued.</p>'}</section>
+  <section class="personal-results ${layout.sizes.results}" style="order:${layout.order.indexOf('results')+2}">${panelControls('results')}<span class="eyebrow">${drop?'VERIFIED CATALOG SELECTION':'WAITING FOR YOUR FIRST DROP'}</span><h2>${icon("crate")} ${drop?.kind==='one_time'?'One Time Dig':'My weekly drop'}</h2>
+  ${drop?`<p>${esc(drop.result.note)}</p><section class="personal-top-three" aria-label="Top 3 picks"><h3>${icon('top')} Top 3 <small>START HERE</small></h3><div class="personal-tracks">${drop.result.tracks.slice(0,3).map(t=>track(t,feedback)).join('')}</div></section><section class="personal-remaining" aria-label="Remaining recommendations"><h3>${icon('crate')} Dig deeper <small>${Math.max(0,drop.result.tracks.length-3)} MORE PICKS</small></h3><div class="personal-tracks">${drop.result.tracks.slice(3).map(t=>track(t,feedback)).join('')}</div></section>`:'<p>Save a personal weekly plan or queue a One Time Dig in the Tuner. Results are visible only to your account.</p>'}</section>`,feedback);
 }
 export function setupPrivateDashboard(){
-  if(initialized)return;initialized=true;
+  if(initialized)return;initialized=true;setupPersonalListening();
   window.addEventListener('privatedropschange',()=>{if(enabled)renderPrivateDashboard();});
   window.addEventListener('personalchange',()=>{if(!enabled)return;if(personal.user?.id!==privateDrops.owner)loadPrivateDrops();renderPrivateDashboard();});
   window.addEventListener('hashchange',()=>{if(enabled)renderPrivateDashboard();});
@@ -133,6 +140,7 @@ export function setupPrivateDashboard(){
     if(b.hasAttribute('data-login-reset')){codeSent=false;message='';renderPrivateDashboard();}
     if(b.hasAttribute('data-open-personal-tuner'))document.querySelector('#tuner').click();
     if(b.hasAttribute('data-private-signout')){await signOut();}
+    if(b.dataset.retryDrop){try{await retryPrivateDrop(b.dataset.retryDrop);message='Retry queued.';}catch(error){message=error.message;}renderPrivateDashboard();return;}
     if(b.dataset.viewDrop){location.href='/#drop='+encodeURIComponent(b.dataset.viewDrop);}
     if(b.dataset.personalTrack){const current=personalInteractions()[b.dataset.personalTrack];try{await setPersonalFeedback(b.dataset.personalTrack,b.dataset.personalKind,!current?.[b.dataset.personalKind]);renderPrivateDashboard();}catch(error){message=error.message;renderPrivateDashboard();}}
   });

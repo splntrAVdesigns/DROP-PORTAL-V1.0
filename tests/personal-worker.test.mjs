@@ -1,12 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {runPersonalWorker} from '../api/personal-worker.js';
+import {localDate} from '../lib/contracts.js';
 import {PERSONAL_DEFAULTS} from '../lib/personal-contracts.js';
 
 // In-memory PostgREST double evaluates filters at mutation time, including CAS claims.
 function database(seed){
   const tables=structuredClone(seed);let seq=0;
-  return {tables,from(table){
+  return {tables,async rpc(name,p){
+    if(name!=='dp_queue_due_weekly')throw Error('Unexpected RPC');
+    const plan=tables.dp_personal_plans.find(x=>x.user_id===p.p_user);
+    if(!plan||plan.revision!==p.p_revision||plan.next_drop_at!==p.p_at)return {data:false,error:null};
+    const profile=tables.dp_personal_profiles.find(x=>x.user_id===p.p_user);
+    const snapshot=profile.weekly_profile&&profile.target_date===localDate(p.p_at)?profile.weekly_profile:profile.base_profile;
+    tables.dp_personal_drops.push({id:'job-'+(++seq),user_id:p.p_user,kind:'weekly',scheduled_at:p.p_at,status:'queued',attempts:0,profile_snapshot:snapshot});
+    Object.assign(plan,{next_drop_at:p.p_next,revision:plan.revision+1});return {data:true,error:null};
+  },from(table){
     const filters=[];let mode='read',values,returnRows=false,max=Infinity,sort=null,single=false;
     const q={select(){returnRows=true;return q;},eq(k,v){filters.push(r=>r[k]===v);return q;},lt(k,v){filters.push(r=>r[k]<v);return q;},lte(k,v){filters.push(r=>r[k]<=v);return q;},
       order(k){sort=k;return q;},limit(n){max=n;return q;},single(){single=true;return q;},
@@ -44,7 +53,7 @@ test('worker recovers abandoned jobs and limits interruption retries',async()=>{
   const result=await runPersonalWorker(db,{now,catalogLoader:async()=>[{tracks}]});
   assert.equal(result.recovered,2);assert.equal(result.ready,1);
   assert.equal(db.tables.dp_personal_drops[0].attempts,2);
-  assert.equal(db.tables.dp_personal_drops[1].status,'needs_research');
+  assert.equal(db.tables.dp_personal_drops[1].status,'failed');
 });
 
 test('weekly processing snapshots each owner taste and advances recurrence independently',async()=>{
@@ -62,4 +71,12 @@ test('catalog failure leaves retryable work and a visible error summary',async()
   const db=database(seed([job('a','A')]));
   const result=await runPersonalWorker(db,{now,catalogLoader:async()=>{throw Error('offline');}});
   assert.equal(result.errors.length,1);assert.equal(db.tables.dp_personal_drops[0].status,'queued');
+});
+
+test('missed weekly checks recover one due occurrence and advance to a future date',async()=>{
+  const data=seed([]);data.dp_personal_plans=[{user_id:'A',weekday:4,local_time:'21:00',next_drop_at:'2026-09-18T02:00:00.000Z',revision:1}];
+  data.dp_personal_profiles=[{user_id:'A',base_profile:profile}];
+  const db=database(data);await runPersonalWorker(db,{now,catalogLoader:async()=>[{tracks}]});
+  assert.equal(db.tables.dp_personal_drops.length,1);
+  assert.ok(Date.parse(db.tables.dp_personal_plans[0].next_drop_at)>+now);
 });
