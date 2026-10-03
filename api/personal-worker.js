@@ -62,29 +62,37 @@ export async function runPersonalWorker(client,{now=new Date(),catalogLoader=cat
       if(queued.data)summary.queued++;
     }catch(e){summary.errors.push('Weekly queue transaction failed.');}
   }
-  const jobs=await client.from('dp_personal_drops').select('*').eq('status','queued').lte('scheduled_at',due).order('scheduled_at').limit(Math.min(limit,maxResearchJobs));if(jobs.error)fail(jobs.error);
+  const jobs=await client.from('dp_personal_drops').select('*').eq('status','queued')
+    .or('scheduled_at.lte.'+due+',next_work_at.lte.'+due).order('scheduled_at').limit(Math.min(limit,maxResearchJobs));if(jobs.error)fail(jobs.error);
   let releases=null;
   for(const job of jobs.data){
     try{
       const claim=await client.from('dp_personal_drops').update({status:'running',attempts:job.attempts+1,updated_at:due}).eq('id',job.id).eq('status','queued').eq('attempts',job.attempts).select('id');
       if(claim.error)fail(claim.error);if(!claim.data?.length)continue;
-      let research={runId:null,tracks:[],coverage:[]};
-      if(researchRunner)research=await researchRunner(client,job,{now});
-      // A raw candidate count cannot predict eligibility after lifetime history filtering.
-      releases??=await catalogLoader();
-      const f=await client.from('dp_feedback').select('track_id,kind,value').eq('user_id',job.user_id);if(f.error)fail(f.error);
-      let payloads=[{tracks:research.tracks},...(releases||[])];
-      if(historyEnabled){
-        const pool=payloads.flatMap(p=>p.tracks||[]).filter(t=>t.id&&t.artistName&&t.title);
-        const unseen=[];
-        for(let offset=0;offset<pool.length;offset+=200){
-          const filtered=await client.rpc('dp_filter_recommendations',{p_user:job.user_id,p_tracks:pool.slice(offset,offset+200)});
-          if(filtered.error)fail(filtered.error);unseen.push(...filtered.data);
+      const prepRead=await client.from('dp_research_preparation').select('*').eq('drop_id',job.id).maybeSingle();
+      if(prepRead.error&&prepRead.error.code!=='PGRST116')fail(prepRead.error);
+      const prepared=prepRead.data?.state==='prepared'&&prepRead.data?.prepared_result;
+      let research={runId:null,tracks:[],coverage:[]},selection;
+      if(prepared){
+        selection=prepRead.data.prepared_result;
+      }else{
+        if(researchRunner)research=await researchRunner(client,job,{now});
+        // A raw candidate count cannot predict eligibility after lifetime history filtering.
+        releases??=await catalogLoader();
+        const f=await client.from('dp_feedback').select('track_id,kind,value').eq('user_id',job.user_id);if(f.error)fail(f.error);
+        let payloads=[{tracks:research.tracks},...(releases||[])];
+        if(historyEnabled){
+          const pool=payloads.flatMap(p=>p.tracks||[]).filter(t=>t.id&&t.artistName&&t.title);
+          const unseen=[];
+          for(let offset=0;offset<pool.length;offset+=200){
+            const filtered=await client.rpc('dp_filter_recommendations',{p_user:job.user_id,p_tracks:pool.slice(offset,offset+200)});
+            if(filtered.error)fail(filtered.error);unseen.push(...filtered.data);
+          }
+          payloads=[{tracks:unseen}];
         }
-        payloads=[{tracks:unseen}];
+        selection=curatePersonalDrop(payloads,job.profile_snapshot,f.data,new Date(job.scheduled_at));
+        if(historyEnabled&&selection.status==='needs_research')selection.detail+=' Previously recommended recordings and related versions were excluded.';
       }
-      const selection=curatePersonalDrop(payloads,job.profile_snapshot,f.data,new Date(job.scheduled_at));
-      if(historyEnabled&&selection.status==='needs_research')selection.detail+=' Previously recommended recordings and related versions were excluded.';
       const freshIds=new Set(research.tracks.map(t=>t.id));
       const fresh=selection.result?.tracks.filter(t=>freshIds.has(t.id)).length||0;
       const fallback=selection.result?.tracks.length-fresh||0;
@@ -100,7 +108,32 @@ export async function runPersonalWorker(client,{now=new Date(),catalogLoader=cat
       }else if(researchRunner){
         selection.detail=`${selection.detail} Fresh research produced ${research.tracks.length} eligible tracks; archive fallback was checked.`;
       }
-      if(researchRunner)await finishPersonalResearch(client,research.runId,{fresh,fallback});
+      if(researchRunner&&!prepared)await finishPersonalResearch(client,research.runId,{fresh,fallback});
+      // Prepare future drops ahead of their publish time. A later worker pass publishes the exact
+      // verified result at the scheduled instant without repeating discovery or losing checkpoints.
+      const future=new Date(job.scheduled_at)>now;
+      if(!prepared&&future&&selection.status==='ready'){
+        const preparedState={drop_id:job.id,state:'prepared',prepared_result:selection,
+          verification:research.verification||{},checkpoint:{runId:research.runId,coverage:research.coverage||[]},
+          prepared_at:new Date().toISOString(),updated_at:due,attempt_count:(prepRead.data?.attempt_count||0)+1};
+        const savedPrep=await client.from('dp_research_preparation').upsert(preparedState,{onConflict:'drop_id'});
+        if(savedPrep.error)fail(savedPrep.error);
+        const held=await client.from('dp_personal_drops').update({status:'queued',next_work_at:job.scheduled_at,
+          status_detail:'Research prepared and verified; awaiting scheduled publish time.',updated_at:due})
+          .eq('id',job.id).eq('status','running').eq('attempts',job.attempts+1).select('id');
+        if(held.error)fail(held.error); continue;
+      }
+      if(!prepared&&future&&selection.status!=='ready'){
+        const retryAt=new Date(Math.min(+new Date(job.scheduled_at),+now+5*60000)).toISOString();
+        const held=await client.from('dp_personal_drops').update({status:'queued',next_work_at:retryAt,
+          status_detail:'Research is still in progress; the worker will resume before publish time.',updated_at:due})
+          .eq('id',job.id).eq('status','running').eq('attempts',job.attempts+1).select('id');
+        if(held.error)fail(held.error); continue;
+      }
+      if(prepared){
+        const marked=await client.from('dp_research_preparation').update({state:'published',published_at:due,updated_at:due}).eq('drop_id',job.id);
+        if(marked.error)fail(marked.error);
+      }
       const fields={status:selection.status,result:selection.result||null,status_detail:selection.detail||null,updated_at:new Date().toISOString()};
       if(researchRunner)fields.research_run_id=research.runId;
       const saved=await client.from('dp_personal_drops').update(fields)
