@@ -40,7 +40,11 @@ language sql
 stable
 as $$
   select jsonb_build_object(
+    'schema','3D.3C',
     'schema_version','3D.3C',
+    'history', to_regclass('public.dp_music_evidence') is not null,
+    'graph', to_regclass('public.dp_research_documents') is not null,
+    'hybrid', to_regclass('public.dp_hybrid_retrieve') is not null,
     'identity_evidence_history', to_regclass('public.dp_music_evidence') is not null,
     'graph_hybrid_retrieval', to_regclass('public.dp_research_documents') is not null,
     'resumable_preparation', to_regclass('public.dp_research_preparation') is not null,
