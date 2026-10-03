@@ -1,0 +1,14 @@
+api/personal-worker.js
+lib/personal-discovery.js
+lib/personal-research-adapters.js
+lib/personal-research-plan.js
+lib/personal-research-runtime.js
+lib/hybrid-retrieval.js
+db/migrations/010_graph_hybrid_retrieval.sql
+db/check_research_readiness.sql
+package.json
+package-lock.json
+tests/helpers/research-client.mjs
+tests/hybrid-retrieval.test.mjs
+docs/sprint-3d3b-graph-hybrid.md
+docs/PATCH_FILES_3D3B.txt
