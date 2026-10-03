@@ -44,7 +44,7 @@ as $$
     'schema_version','3D.3C',
     'history', to_regclass('public.dp_music_evidence') is not null,
     'graph', to_regclass('public.dp_retrieval_documents') is not null,
-    'hybrid', to_regprocedure('public.dp_hybrid_retrieve(jsonb,jsonb)') is not null,
+    'hybrid', exists (select 1 from pg_proc where pronamespace='public'::regnamespace and proname='dp_hybrid_retrieve'),
     'identity_evidence_history', to_regclass('public.dp_music_evidence') is not null,
     'graph_hybrid_retrieval', to_regclass('public.dp_research_documents') is not null,
     'resumable_preparation', to_regclass('public.dp_research_preparation') is not null,
