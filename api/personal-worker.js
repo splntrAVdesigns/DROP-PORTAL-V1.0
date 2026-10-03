@@ -96,7 +96,7 @@ export async function runPersonalWorker(client,{now=new Date(),catalogLoader=cat
       const freshIds=new Set(research.tracks.map(t=>t.id));
       const fresh=selection.result?.tracks.filter(t=>freshIds.has(t.id)).length||0;
       const fallback=selection.result?.tracks.length-fresh||0;
-      if(selection.result&&researchRunner){
+      if(selection.result&&researchRunner&&!prepared){
         selection.result.source=fallback?'researched-with-verified-archive-fallback':'fresh-verified-research';
         selection.result.researchRunId=research.runId;
         selection.result.selectionSources={freshResearch:fresh,verifiedArchiveFallback:fallback};
@@ -105,7 +105,7 @@ export async function runPersonalWorker(client,{now=new Date(),catalogLoader=cat
           `${fresh} fresh researched tracks with day-precision release evidence and listening or store links.`;
         const incomplete=(research.coverage||[]).filter(s=>s.status!=='disabled'&&(s.status!=='ready'||s.state!=='complete'));
         if(incomplete.length)selection.result.note+=` Research coverage is partial: ${incomplete.map(s=>s.sourceId+' ('+s.state+')').join(', ')}.`;
-      }else if(researchRunner){
+      }else if(researchRunner&&!prepared){
         selection.detail=`${selection.detail} Fresh research produced ${research.tracks.length} eligible tracks; archive fallback was checked.`;
       }
       if(researchRunner&&!prepared)await finishPersonalResearch(client,research.runId,{fresh,fallback});
