@@ -162,7 +162,7 @@ export default async function handler(req,res){
   try{
     const client=createClient(process.env.SUPABASE_URL,process.env.SUPABASE_SERVICE_ROLE_KEY,
       {auth:{persistSession:false,autoRefreshToken:false},global:{fetch:(url,options)=>fetch(url,{...options,signal:AbortSignal.timeout(12000)})}});
-    try{await retrievalReadiness(client);}catch{return reply(res,503,{message:'Research schema unavailable. Apply migrations 009 then 010 and retry.'});}
+    try{await retrievalReadiness(client);}catch{return reply(res,503,{message:'Research schema unavailable. Apply migrations 009, 010, then 011 and retry.'});}
     const runId=randomUUID();
     const started=await client.rpc('dp_start_worker_run',{p_id:runId});if(started.error)fail(started.error);
     let summary;
