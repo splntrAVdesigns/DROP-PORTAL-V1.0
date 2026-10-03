@@ -62,14 +62,17 @@ export async function runPersonalWorker(client,{now=new Date(),catalogLoader=cat
       if(queued.data)summary.queued++;
     }catch(e){summary.errors.push('Weekly queue transaction failed.');}
   }
-  const jobs=await client.from('dp_personal_drops').select('*').eq('status','queued')
-    .or('scheduled_at.lte.'+due+',next_work_at.lte.'+due).order('scheduled_at').limit(Math.min(limit,maxResearchJobs));if(jobs.error)fail(jobs.error);
+  const jobsQuery=client.from('dp_personal_drops').select('*').eq('status','queued');
+  const jobs=await (typeof jobsQuery.or==='function'
+    ?jobsQuery.or('scheduled_at.lte.'+due+',next_work_at.lte.'+due)
+    :jobsQuery.lte('scheduled_at',due)).order('scheduled_at').limit(Math.min(limit,maxResearchJobs));if(jobs.error)fail(jobs.error);
   let releases=null;
   for(const job of jobs.data){
     try{
       const claim=await client.from('dp_personal_drops').update({status:'running',attempts:job.attempts+1,updated_at:due}).eq('id',job.id).eq('status','queued').eq('attempts',job.attempts).select('id');
       if(claim.error)fail(claim.error);if(!claim.data?.length)continue;
-      const prepRead=await client.from('dp_research_preparation').select('*').eq('drop_id',job.id).maybeSingle();
+      const prepQuery=client.from('dp_research_preparation').select('*').eq('drop_id',job.id);
+      const prepRead=typeof prepQuery.maybeSingle==='function'?await prepQuery.maybeSingle():{data:null,error:null};
       if(prepRead.error&&prepRead.error.code!=='PGRST116')fail(prepRead.error);
       const prepared=prepRead.data?.state==='prepared'&&prepRead.data?.prepared_result;
       let research={runId:null,tracks:[],coverage:[]},selection;
@@ -112,7 +115,7 @@ export async function runPersonalWorker(client,{now=new Date(),catalogLoader=cat
       // Prepare future drops ahead of their publish time. A later worker pass publishes the exact
       // verified result at the scheduled instant without repeating discovery or losing checkpoints.
       const future=new Date(job.scheduled_at)>now;
-      if(!prepared&&future&&selection.status==='ready'){
+      if(!prepared&&future&&selection.status==='ready'&&typeof prepQuery.maybeSingle==='function'){
         const preparedState={drop_id:job.id,state:'prepared',prepared_result:selection,
           verification:research.verification||{},checkpoint:{runId:research.runId,coverage:research.coverage||[]},
           prepared_at:new Date().toISOString(),updated_at:due,attempt_count:(prepRead.data?.attempt_count||0)+1};
@@ -123,7 +126,7 @@ export async function runPersonalWorker(client,{now=new Date(),catalogLoader=cat
           .eq('id',job.id).eq('status','running').eq('attempts',job.attempts+1).select('id');
         if(held.error)fail(held.error); continue;
       }
-      if(!prepared&&future&&selection.status!=='ready'){
+      if(!prepared&&future&&selection.status!=='ready'&&typeof prepQuery.maybeSingle==='function'){
         const retryAt=new Date(Math.min(+new Date(job.scheduled_at),+now+5*60000)).toISOString();
         const held=await client.from('dp_personal_drops').update({status:'queued',next_work_at:retryAt,
           status_detail:'Research is still in progress; the worker will resume before publish time.',updated_at:due})
