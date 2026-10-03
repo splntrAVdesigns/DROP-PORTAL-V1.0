@@ -169,7 +169,7 @@ export default async function handler(req,res){
     const runId=randomUUID();
     const started=await client.rpc('dp_start_worker_run',{p_id:runId});if(started.error)fail(started.error);
     let summary;
-    try{summary=await runPersonalWorker(client,{researchRunner:(db,job,options)=>researchPersonalJob(db,job,{...options,hybridEnabled:true}),maxResearchJobs:1,historyEnabled:true});}catch(error){
+    try{summary=await runPersonalWorker(client,{researchRunner:(db,job,options)=>researchPersonalJob(db,job,{...options,hybridEnabled:true,releaseVerificationEnabled:true}),maxResearchJobs:1,historyEnabled:true});}catch(error){
       await client.from('dp_worker_runs').update({finished_at:new Date().toISOString(),outcome:'failed'}).eq('id',runId);throw error;
     }
     const finished=await client.from('dp_worker_runs').update({finished_at:new Date().toISOString(),outcome:summary.errors.length?'failed':'success'}).eq('id',runId);if(finished.error)fail(finished.error);
