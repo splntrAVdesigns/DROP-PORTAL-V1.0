@@ -62,44 +62,33 @@ export async function runPersonalWorker(client,{now=new Date(),catalogLoader=cat
       if(queued.data)summary.queued++;
     }catch(e){summary.errors.push('Weekly queue transaction failed.');}
   }
-  const jobsQuery=client.from('dp_personal_drops').select('*').eq('status','queued');
-  const jobs=await (typeof jobsQuery.or==='function'
-    ?jobsQuery.or('scheduled_at.lte.'+due+',next_work_at.lte.'+due)
-    :jobsQuery.lte('scheduled_at',due)).order('scheduled_at').limit(Math.min(limit,maxResearchJobs));if(jobs.error)fail(jobs.error);
+  const jobs=await client.from('dp_personal_drops').select('*').eq('status','queued').lte('scheduled_at',due).order('scheduled_at').limit(Math.min(limit,maxResearchJobs));if(jobs.error)fail(jobs.error);
   let releases=null;
   for(const job of jobs.data){
     try{
       const claim=await client.from('dp_personal_drops').update({status:'running',attempts:job.attempts+1,updated_at:due}).eq('id',job.id).eq('status','queued').eq('attempts',job.attempts).select('id');
       if(claim.error)fail(claim.error);if(!claim.data?.length)continue;
-      const prepQuery=client.from('dp_research_preparation').select('*').eq('drop_id',job.id);
-      const prepRead=typeof prepQuery.maybeSingle==='function'?await prepQuery.maybeSingle():{data:null,error:null};
-      if(prepRead.error&&prepRead.error.code!=='PGRST116')fail(prepRead.error);
-      const prepared=prepRead.data?.state==='prepared'&&prepRead.data?.prepared_result;
-      let research={runId:null,tracks:[],coverage:[]},selection;
-      if(prepared){
-        selection=prepRead.data.prepared_result;
-      }else{
-        if(researchRunner)research=await researchRunner(client,job,{now});
-        // A raw candidate count cannot predict eligibility after lifetime history filtering.
-        releases??=await catalogLoader();
-        const f=await client.from('dp_feedback').select('track_id,kind,value').eq('user_id',job.user_id);if(f.error)fail(f.error);
-        let payloads=[{tracks:research.tracks},...(releases||[])];
-        if(historyEnabled){
-          const pool=payloads.flatMap(p=>p.tracks||[]).filter(t=>t.id&&t.artistName&&t.title);
-          const unseen=[];
-          for(let offset=0;offset<pool.length;offset+=200){
-            const filtered=await client.rpc('dp_filter_recommendations',{p_user:job.user_id,p_tracks:pool.slice(offset,offset+200)});
-            if(filtered.error)fail(filtered.error);unseen.push(...filtered.data);
-          }
-          payloads=[{tracks:unseen}];
+      let research={runId:null,tracks:[],coverage:[]};
+      if(researchRunner)research=await researchRunner(client,job,{now});
+      // A raw candidate count cannot predict eligibility after lifetime history filtering.
+      releases??=await catalogLoader();
+      const f=await client.from('dp_feedback').select('track_id,kind,value').eq('user_id',job.user_id);if(f.error)fail(f.error);
+      let payloads=[{tracks:research.tracks},...(releases||[])];
+      if(historyEnabled){
+        const pool=payloads.flatMap(p=>p.tracks||[]).filter(t=>t.id&&t.artistName&&t.title);
+        const unseen=[];
+        for(let offset=0;offset<pool.length;offset+=200){
+          const filtered=await client.rpc('dp_filter_recommendations',{p_user:job.user_id,p_tracks:pool.slice(offset,offset+200)});
+          if(filtered.error)fail(filtered.error);unseen.push(...filtered.data);
         }
-        selection=curatePersonalDrop(payloads,job.profile_snapshot,f.data,new Date(job.scheduled_at));
-        if(historyEnabled&&selection.status==='needs_research')selection.detail+=' Previously recommended recordings and related versions were excluded.';
+        payloads=[{tracks:unseen}];
       }
+      const selection=curatePersonalDrop(payloads,job.profile_snapshot,f.data,new Date(job.scheduled_at));
+      if(historyEnabled&&selection.status==='needs_research')selection.detail+=' Previously recommended recordings and related versions were excluded.';
       const freshIds=new Set(research.tracks.map(t=>t.id));
       const fresh=selection.result?.tracks.filter(t=>freshIds.has(t.id)).length||0;
       const fallback=selection.result?.tracks.length-fresh||0;
-      if(selection.result&&researchRunner&&!prepared){
+      if(selection.result&&researchRunner){
         selection.result.source=fallback?'researched-with-verified-archive-fallback':'fresh-verified-research';
         selection.result.researchRunId=research.runId;
         selection.result.selectionSources={freshResearch:fresh,verifiedArchiveFallback:fallback};
@@ -108,35 +97,10 @@ export async function runPersonalWorker(client,{now=new Date(),catalogLoader=cat
           `${fresh} fresh researched tracks with day-precision release evidence and listening or store links.`;
         const incomplete=(research.coverage||[]).filter(s=>s.status!=='disabled'&&(s.status!=='ready'||s.state!=='complete'));
         if(incomplete.length)selection.result.note+=` Research coverage is partial: ${incomplete.map(s=>s.sourceId+' ('+s.state+')').join(', ')}.`;
-      }else if(researchRunner&&!prepared){
+      }else if(researchRunner){
         selection.detail=`${selection.detail} Fresh research produced ${research.tracks.length} eligible tracks; archive fallback was checked.`;
       }
-      if(researchRunner&&!prepared)await finishPersonalResearch(client,research.runId,{fresh,fallback});
-      // Prepare future drops ahead of their publish time. A later worker pass publishes the exact
-      // verified result at the scheduled instant without repeating discovery or losing checkpoints.
-      const future=new Date(job.scheduled_at)>now;
-      if(!prepared&&future&&selection.status==='ready'&&typeof prepQuery.maybeSingle==='function'){
-        const preparedState={drop_id:job.id,state:'prepared',prepared_result:selection,
-          verification:research.verification||{},checkpoint:{runId:research.runId,coverage:research.coverage||[]},
-          prepared_at:new Date().toISOString(),updated_at:due,attempt_count:(prepRead.data?.attempt_count||0)+1};
-        const savedPrep=await client.from('dp_research_preparation').upsert(preparedState,{onConflict:'drop_id'});
-        if(savedPrep.error)fail(savedPrep.error);
-        const held=await client.from('dp_personal_drops').update({status:'queued',next_work_at:job.scheduled_at,
-          status_detail:'Research prepared and verified; awaiting scheduled publish time.',updated_at:due})
-          .eq('id',job.id).eq('status','running').eq('attempts',job.attempts+1).select('id');
-        if(held.error)fail(held.error); continue;
-      }
-      if(!prepared&&future&&selection.status!=='ready'&&typeof prepQuery.maybeSingle==='function'){
-        const retryAt=new Date(Math.min(+new Date(job.scheduled_at),+now+5*60000)).toISOString();
-        const held=await client.from('dp_personal_drops').update({status:'queued',next_work_at:retryAt,
-          status_detail:'Research is still in progress; the worker will resume before publish time.',updated_at:due})
-          .eq('id',job.id).eq('status','running').eq('attempts',job.attempts+1).select('id');
-        if(held.error)fail(held.error); continue;
-      }
-      if(prepared){
-        const marked=await client.from('dp_research_preparation').update({state:'published',published_at:due,updated_at:due}).eq('drop_id',job.id);
-        if(marked.error)fail(marked.error);
-      }
+      if(researchRunner)await finishPersonalResearch(client,research.runId,{fresh,fallback});
       const fields={status:selection.status,result:selection.result||null,status_detail:selection.detail||null,updated_at:new Date().toISOString()};
       if(researchRunner)fields.research_run_id=research.runId;
       const saved=await client.from('dp_personal_drops').update(fields)
@@ -165,7 +129,7 @@ export default async function handler(req,res){
   try{
     const client=createClient(process.env.SUPABASE_URL,process.env.SUPABASE_SERVICE_ROLE_KEY,
       {auth:{persistSession:false,autoRefreshToken:false},global:{fetch:(url,options)=>fetch(url,{...options,signal:AbortSignal.timeout(12000)})}});
-    try{await retrievalReadiness(client);}catch{return reply(res,503,{message:'Research schema unavailable. Apply migrations 009, 010, then 011 and retry.'});}
+    try{await retrievalReadiness(client);}catch{return reply(res,503,{message:'Research schema unavailable. Apply migrations 009 then 010 and retry.'});}
     const runId=randomUUID();
     const started=await client.rpc('dp_start_worker_run',{p_id:runId});if(started.error)fail(started.error);
     let summary;
